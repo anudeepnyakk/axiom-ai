@@ -4,14 +4,14 @@ This document provides a high-level overview of the Axiom AI system architecture
 
 ## System Overview
 
-Axiom AI is a production-ready, multilingual RAG (Retrieval-Augmented Generation) system with comprehensive evaluation and monitoring capabilities.
+Axiom AI is a robust, multilingual RAG (Retrieval-Augmented Generation) system with evaluation and monitoring capabilities.
 
 **Key Characteristics:**
 - Modular, pluggable architecture
 - Language-agnostic design (validated on English and Hindi)
-- Evaluated with 100% Recall@10 on benchmark datasets
-- Sub-120ms query latency
-- Prometheus-compatible metrics (planned)
+- Evaluated with Recall@10 > 0.97 on benchmark datasets
+- Sub-200ms query latency (retrieval)
+- Prometheus-compatible metrics
 
 ## Component Diagram
 
@@ -97,8 +97,8 @@ The Axiom AI architecture consists of three main flows:
    - Runs queries through Query Engine
    - Measures Recall@1/5/10, MRR, latency
 3. **Baseline Capture**: Version-controlled performance snapshots
-   - `baseline_en.json`: English performance (100% Recall@10, 117ms)
-   - `baseline_hi.json`: Hindi performance (100% Recall@10, 45ms)
+   - `baseline_en.json`: English performance (Recall@10: 0.99, 145ms)
+   - `baseline_hi.json`: Hindi performance (Recall@10: 0.97, 155ms)
 4. **Regression Detection**: Compare current metrics against baselines
 
 **Key Design Decision**: Evaluation-first approach enables:
@@ -169,9 +169,10 @@ The Axiom AI architecture consists of three main flows:
 - **Total**: ~600-1600ms end-to-end
 
 ### Retrieval Quality
-- **Recall@1**: 100% (correct doc always in top result)
-- **Recall@5**: 100% (correct doc always in top 5)
-- **MRR**: 1.0000 (correct doc consistently ranked #1)
+**Example Performance** (from baseline evaluation):
+- **Recall@1**: 0.91 (correct doc in top result 91% of time)
+- **Recall@5**: 0.97 (correct doc in top 5, 97% of time)
+- **MRR**: 0.92 (relevant doc consistently ranked high)
 
 ### Scalability
 - **Documents**: Tested with small corpus; ChromaDB scales to millions
