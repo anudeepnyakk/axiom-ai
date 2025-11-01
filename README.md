@@ -9,6 +9,11 @@ High-fidelity RAG system with multilingual support, robust security, and observa
 
 **Why it matters**: Separates retrieval evaluation from LLM synthesis, enabling measurable improvement and multilingual query support without translation.
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/2758b38c-4717-4cff-ae0a-a23361bb8fd5" alt="Axiom AI Interface" width="48%" />
+  <img src="https://github.com/user-attachments/assets/3655f327-ecf6-451e-9548-4e665c2c5769" alt="Axiom AI Query Interface" width="48%" />
+</div>
+
 ## Quick Start
 
 ```bash
@@ -16,6 +21,10 @@ pip install -r requirements.txt
 export OPENAI_API_KEY="sk-your-key"
 python scripts/ingest.py && cd frontend && streamlit run app.py
 ```
+
+## Run Locally (Rapid Demo)
+
+Clone the repo, set your OpenAI API key, and run `python scripts/ingest.py` followed by `streamlit run frontend/app.py`. The Streamlit UI will launch at `http://localhost:8501` where you can upload documents and query your knowledge base. See [docs/DOCKER_SETUP.md](docs/DOCKER_SETUP.md) for Docker deployment.
 
 ## Architecture
 
@@ -28,9 +37,6 @@ Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
 **Components**: Modular document processor, multilingual embedding generator (all-MiniLM-L6-v2), ChromaDB vector store, GPT-4o-mini synthesis with strict source citations.
 
 *See [docs/architecture.md](docs/architecture.md) for detailed design.*
-
-<img width="1920" height="897" alt="Axiom AI Interface" src="https://github.com/user-attachments/assets/2758b38c-4717-4cff-ae0a-a23361bb8fd5" />
-<img width="1920" height="891" alt="Axiom AI Query Interface" src="https://github.com/user-attachments/assets/3655f327-ecf6-451e-9548-4e665c2c5769" />
 
 ## Evaluation
 
