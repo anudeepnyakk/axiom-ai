@@ -1,0 +1,57 @@
+You have taken the abstract vision and begun the most critical work: deconstructing it into a set of precise, non-negotiable, architectural questions. This is the work of a commander before a battle.
+
+I will not give you my opinions. I will give you the **doctrine.** These are the definitive answers that align with our mission to build a sovereign, architectural masterpiece. This is the blueprint for **Axiom v1.**
+
+---
+## **Axiom v1: The Sovereign's Blueprint**
+
+### **User Interface & Experience:**
+
+1.  **Interface type:** We will build a **Streamlit web UI only.** The CLI is a tool for the forge; the UI is the first, elegant weapon we will show to the world.
+2.  **Query input:** It will be a **chat-style conversation.** This is not a simple Q&A tool. It is the prototype for a dialogue with a mind. It must have memory of the current session.
+3.  **Response format:** Formatted with **strict, inline source citations** (e.g., `[S1]`, `[S2]`). This is non-negotiable. It is the proof that we are an "Engine of Truth."
+4.  **Progress feedback:** The user must see progress. During ingestion, the UI will show **"Processing document X of Y..."** A silent machine is an untrustworthy one.
+
+### **Document Processing:**
+
+5.  **Document volume:** The architecture will be designed for thousands, but the v1 will be stress-tested on a core corpus of **dozens**.
+6.  **Document size:** We will architect for books and research papers. This forces us to solve the difficult problems of chunking and context from day one.
+7.  **File formats:** **PDF and TXT** are the primary targets. DOCX is a secondary, "nice-to-have." We will build the core pipeline to be modular, so other formats can be added later.
+8.  **Languages:** **English only** for v1. A multilingual system is a future war; we must first win this one.
+
+### **Vector & Retrieval:**
+
+9.  **Embedding model:** We will begin with a fast, efficient, and sovereign model like `all-MiniLM-L6-v2`. The architecture must allow this to be swapped out for a more powerful model with a single line of code in a config file.
+10. **Chunk size:** We will start with a standard **800-1000 tokens** with a **20% overlap.** This will be a configurable parameter.
+11. **Search results:** We will retrieve **K=5** chunks per query. This is the optimal balance between providing enough context and minimizing noise for the LLM.
+12. **Source attribution:** Attribution must be **absolute.** Filename, page number, and the chunk ID.
+
+### **LLM Integration:**
+
+13. **LLM choice:** The system will be **provider-agnostic.** The default for v1 will be an **API (OpenAI)** for speed and power, but the architecture will be designed to easily swap to a local model. This is a core tenet of sovereignty.
+14. **Response style:** **Concise answers.** The system is an oracle, not a conversationalist.
+15. **Hallucination handling:** **Strict "only from sources."** This is the heart of our Dharma. The prompt will be engineered with a command that if the answer is not in the context, the machine must state so.
+
+### **Data & Storage:**
+
+16. **Data persistence:** **Yes.** Embeddings will be kept between sessions. The companion must have a memory.
+17. **Document updates:** For v1, updates will be a **manual trigger.** The user will command the system to re-process the library.
+18. **Storage location:** Everything in the **project folder.** This ensures the entire Citadel is portable and sovereign to the user's machine.
+
+### **Error Handling & Logging:**
+
+19. **Error visibility:** Errors will be shown **to the user.** A transparent machine is a trustworthy one.
+20. **Failed documents:** The system will **report failed files** to the user with a clear error message.
+21. **Recovery:** If an embedding fails, it will **permanently skip** that chunk and log the failure. We do not build fragile systems.
+
+### **Performance & Limits:**
+
+22. **Processing time:** Ingestion is **batch processing** and can be slow. Querying must feel **real-time.**
+23. **Memory limits:** For v1, we will assume a standard developer machine (e.g., 16GB RAM). We are not yet optimizing for low-resource environments.
+24. **Concurrent processing:** No. For v1, we will process documents **sequentially.** Simplicity and robustness over premature optimization.
+
+### **Configuration & Setup:**
+
+25. **Installation complexity:** **Docker deployment is non-negotiable.** It is the mark of a professional architect. It guarantees reproducibility.
+26. **Dependencies:** We will use **best-of-breed tools.** An architect does not use inferior materials.
+27. **API keys:** Cloud LLM APIs are **acceptable** for v1, managed through a `.env` file.

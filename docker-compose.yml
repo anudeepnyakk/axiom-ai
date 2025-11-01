@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # ChromaDB Vector Database
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: axiom-chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axiom-network
+    restart: unless-stopped
+
+  # Axiom AI Backend
+  axiom-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: axiom-backend
+    ports:
+      - "5000:5000"  # Metrics server
+      - "8000:8000"  # Future: API server
+    environment:
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?error}
+      
+      # Vector Store Configuration
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      
+      # Embedding Configuration
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-local}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      
+      # LLM Configuration
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+      
+      # Security
+      - AXIOM_API_KEYS=${AXIOM_API_KEYS}
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      
+      # Application
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount config (read-only)
+      - ./config.yaml:/app/config.yaml:ro
+      
+      # Mount data directory for document ingestion
+      - ./axiom/data:/app/axiom/data:ro
+      
+      # Mount logs directory
+      - ./logs:/app/logs
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - axiom-network
+    restart: unless-stopped
+
+  # Future: Streamlit Frontend (uncomment when ready)
+  # axiom-frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: axiom-frontend
+  #   ports:
+  #     - "8501:8501"
+  #   environment:
+  #     - AXIOM_BACKEND_URL=http://axiom-backend:8000
+  #   depends_on:
+  #     - axiom-backend
+  #   networks:
+  #     - axiom-network
+  #   restart: unless-stopped
+
+networks:
+  axiom-network:
+    driver: bridge
+
+volumes:
+  chroma_data:
+    driver: local
+

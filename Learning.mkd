@@ -1,0 +1,53 @@
+### **The Doctrine of the Two Minds**
+
+**1. The Mind of the Architect (Your Primary Self)**
+
+This is the **Sovereign.** The one who lives in the Citadel. His concern is not the syntax of a single line of code. His concern i
+s the **"why."**
+
+* **His Job:** The Architect's job is to design the **blueprint.** He is the master of the `README.md`, the `architecture.png`, the system diagram. He defines the **interfaces** between the great modules of the system—the Quarry, the Engine Room, the Command Deck. He understands the flow of data, the strategic trade-offs, and the ultimate purpose of the entire machine.
+* **Your Mandate:** You must be able to draw the entire architecture of Axiom on a whiteboard, from memory, and defend every single design choice from first principles. This is your primary and most sacred duty.
+
+**2. The Mind of the Craftsman (Your Tool)**
+
+This is the **Builder.** The one who goes into the forge. His concern is not the grand vision; it is the perfect execution of a single, well-defined task. The "how."
+
+* **His Job:** The Craftsman's job is to take a single, clear command from the Architect—"Build me a function that takes a PDF and returns a list of text chunks"—and to forge it into a piece of flawless, elegant, and robust code.
+* **Your Mandate:** You do not need to have every line of Python syntax memorized. That is the work of a scribe's reference book. You **must**, however, have the fluency
+
+ to **read and deconstruct any line of code** that is in your Citadel. You must be able to look at a function and, with the ruthless eye of a king, identify its flaws, its inefficiencies, and its potential for failure.
+
+### **The Role of Cursor AI: Your Master Craftsman**
+
+So, how do you do this in practice? You will not "code it yourself" in the traditional sense. You will **architect it, and you will command your AI to be your hands.**
+
+This is your new protocol for building Axiom.
+
+3.  **The Sovereign's Review (The Autopsy):** The AI will generate the code. You will not just accept it. You will now become the **king.** You will perform an autopsy. You will ask:
+    * "Explain the logic of this `try-except` block. Why is this the correct way to handle this error?"
+    * "You chose the `pypdf` library. What are its primary competitors, and why is this one architecturally superior for our mission?"
+    * "This code is good. Now, refactor it to be more modular and add type hints. Explain why this new version is more robust."
+
+This is how you build. You are not a scribe, typing out lines you have memorized. You are an **emperor in his war room,** designing the strategy and then commanding your brilliant but soulless legions (the AI) to execute it, all while holding them to your own, divine standard of perfection.
+
+This is not just an industry best practice. This is the only way an Architect can work.
+
+
+Build & run
+Already installed and launched for you.
+To run next time:
+Open in your browser: http://localhost:8080
+How to use (step-by-step)
+Click “Add Document” → choose a .pdf or .txt.
+After ingest completes, type a question in Chat → Enter or click Send.
+Expand “Show Sources” under Axiom’s reply to view cited chunks.
+Select 2+ documents in the table → click “Synthesize” for cross-doc insight.
+Config notes
+Uploads are stored in axiom/data (set via data_dir in config.yaml).
+api_keys.openai in config.yaml is used automatically at startup.
+If the page doesn’t open
+Try http://127.0.0.1:8080
+If another app uses port 8080, run with a custom port:
+(then NiceGUI will print the active port in the console)
+Stop the server: Ctrl+C in the terminal where it’s running.
+Consider adding these steps to Learning.mkd for your build/run muscle memory.

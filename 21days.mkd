@@ -1,0 +1,132 @@
+
+### **The Final 21-Day Plan: Axiom AI Readiness + Interview Prep**
+
+This is your single source of truth for the next three weeks. Each day balances project development with targeted interview practice.
+
+---
+
+### **Week 1: Foundations & Baselines**
+
+*   **Day 1: Ingestion & Core Data Structures**
+    *   **Axiom AI**: Implement PDF/TXT ingestion and deterministic chunking via `config.yaml`. Add 2 unit tests for the chunking logic.
+    *   **Coding Practice**: Two Sum, Valid Anagram.
+    *   **CS Concepts**: Review Arrays vs. Hash Maps (time/space trade-offs).
+
+*   **Day 2: Embeddings & Complexity**
+    *   **Axiom AI**: Implement the pluggable `EmbeddingGenerator` with both OpenAI and a local multilingual `sentence-transformers` model.
+    *   **Coding Practice**: Longest Substring Without Repeating Characters.
+    *   **CS Concepts**: Review Big-O notation (O(1), O(n), O(log n), O(n²)).
+
+*   **Day 3: Persistence & Databases**
+    *   **Axiom AI**: Configure ChromaDB with a persistent volume.
+    *   **Exit Criteria**: A restart test (`docker-compose down && docker-compose up`) proves data is not lost.
+    *   **Coding Practice**: Group Anagrams.
+    *   **CS Concepts**: SQL Indexes. Why use a Vector DB instead of just storing vectors in PostgreSQL?
+
+*   **Day 4: Retrieval & Networking**
+    *   **Axiom AI**: Build the core retrieval pipeline: query -> top-k retrieval -> prompt assembly with citations. Implement basic token budgeting.
+    *   **Coding Practice**: Merge Intervals.
+    *   **CS Concepts**: HTTP basics (Request/Response, Status Codes). REST vs. WebSockets.
+
+*   **Day 5: Evaluation & OS Concepts**
+    *   **Axiom AI**: Create the evaluation harness script (`axiom/eval/run_eval.py`).
+    *   **Exit Criteria**: Script computes Recall@1/5/10, MRR, and average retrieval latency on a small English test set. Commit the `baseline_en.json` report.
+    *   **Coding Practice**: Top K Frequent Elements.
+    *   **CS Concepts**: Processes vs. Threads vs. Async I/O. When would you use each for API calls?
+
+*   **Day 6: Multilingual & Stacks**
+    *   **Axiom AI**: Curate a small Hindi test set (30-50 queries). Run the eval harness on it.
+    *   **Exit Criteria**: Commit `baseline_hi.json` showing Recall@k/MRR for Hindi.
+    *   **Coding Practice**: Valid Parentheses.
+    *   **CS Concepts**: Review Stacks and Queues.
+
+*   **Day 7: Documentation & Initial Design**
+    *   **Axiom AI**: Create a clean `README.md` with a "How to Run" section (2 commands). Create `docs/architecture.md` with a high-level component diagram.
+    *   **Coding Practice**: BFS for Shortest Path in a Grid.
+    *   **System Design**: On paper, sketch the basic RAG pipeline for Axiom AI (demo scale).
+
+---
+
+### **Week 2: Productionizing & Reliability**
+
+*   **Day 8: Metrics & Trees**
+    *   **Axiom AI**: Add a `/metrics` endpoint (Prometheus format) exposing `request_count`, `errors_total`, and `latency_seconds` histograms for each pipeline stage.
+    *   **Coding Practice**: Binary Tree Level Order Traversal.
+    *   **CS Concepts**: Review Trees (BST, Traversals).
+
+*   **Day 9: Logging & Heaps**
+    *   **Axiom AI**: Implement structured JSON logging with a `request_id` that correlates across all pipeline stages.
+    *   **Coding Practice**: Kth Largest Element in an Array (use a heap).
+    *   **CS Concepts**: Review Heaps/Priority Queues.
+
+*   **Day 10: Reliability & System Flow**
+    *   **Axiom AI**: Add retry logic with exponential backoff for external API calls (e.g., OpenAI). Implement a simple degraded mode (e.g., return a cached or error message if a service is down).
+    *   **Coding Practice**: Merge K Sorted Lists.
+    *   **CS Concepts**: Transactions & ACID properties in databases.
+
+*   **Day 11: Security & Caching**
+    *   **Axiom AI**: Add a basic PII redaction filter for inputs. Implement simple API key authentication.
+    *   **Coding Practice**: Design and implement an LRU Cache.
+    *   **CS Concepts**: Caching strategies (LRU, LFU, Write-Through, Write-Back).
+
+*   **Day 12: Dockerization**
+    *   **Axiom AI**: Create `Dockerfile` for the backend and a `docker-compose.yml` to run the entire stack (backend, UI, ChromaDB) locally.
+    *   **Exit Criteria**: `docker-compose up` successfully starts all services. Secrets are passed via environment variables, not baked into the image.
+    *   **Coding Practice**: Search in Rotated Sorted Array.
+    *   **CS Concepts**: Containers vs. Virtual Machines.
+
+*   **Day 13: CI/CD Pipeline**
+    *   **Axiom AI**: Set up a GitHub Actions workflow.
+    *   **Exit Criteria**: On every push, the CI runs linting, unit tests, and a retrieval-only evaluation smoke test (mocking the LLM). The job must complete in under 120 seconds.
+    *   **Coding Practice**: Sliding Window Maximum.
+    *   **CS Concepts**: What is CI/CD? Explain the benefits.
+
+*   **Day 14: Advanced Design & Docs**
+    *   **Axiom AI**: Create `docs/EVAL.md` and `docs/SECURITY.md`.
+    *   **Coding Practice**: Word Break (Dynamic Programming).
+    *   **System Design**: On paper, sketch a multi-tenant RAG system. How would you isolate data? How would you scale the vector DB?
+
+---
+
+### **Week 3: Polish & Interview Readiness**
+
+*   **Day 15: Demo & Graphs**
+    *   **Axiom AI**: Record a crisp, sub-3-minute demo video showing the end-to-end flow: ingest -> query -> answer with citations -> /metrics page.
+    *   **Coding Practice**: Course Schedule (Graph - Topological Sort).
+    *   **CS Concepts**: Review Graphs (DFS, BFS, Adjacency List/Matrix).
+
+*   **Day 16: Code Quality & Final Polish**
+    *   **Axiom AI**: Full repo cleanup: add docstrings, refactor complex functions, ensure all configs are clean.
+    *   **Coding Practice**: Review your weakest 2-3 problem types from the past weeks.
+    *   **CS Concepts**: Review the CAP Theorem.
+
+*   **Day 17: Pitch & Advanced Design**
+    *   **Axiom AI**: Rehearse your 3-minute pitch for Axiom AI out loud, using your architecture diagram.
+    *   **Coding Practice**: Median from Data Stream.
+    *   **System Design**: On paper, sketch a low-latency RAG system. What changes? (Quantized local models, streaming, batching, etc.).
+
+*   **Day 18: Mock System Design**
+    *   **Prep**: Set a 45-minute timer. On a whiteboard or paper, talk through and solve one of your system design sketches (e.g., "Design a scalable, multi-tenant RAG system"). Record yourself if possible.
+    *   **Coding Practice**: Review any 2 problems you struggled with.
+
+*   **Day 19: Mock Coding Interview**
+    *   **Prep**: Pick 3 random medium problems from your practice list. Set a 60-minute timer. Solve them as you would in an interview, explaining your thought process out loud.
+
+*   **Day 20: Full Review**
+    *   **Prep**: Review all CS concepts and how they apply to Axiom AI. Practice answering common questions: "How do you reduce hallucinations?", "How do you handle multilingual data?", "Why Chroma?".
+
+*   **Day 21: Full Mock Interview (Self-Assessed)**
+    *   **Run-through**:
+        1.  (5 min) Introduce yourself and give your 3-minute Axiom AI pitch.
+        2.  (45 min) Do a full mock coding round (2 problems).
+        3.  (45 min) Do a full mock system design round.
+    *   **Goal**: Identify remaining weak spots to focus on before real interviews.
+
+---
+
+### ✅ **By Day 21, You Are Ready**
+
+You will have:
+*   **A "Lean 100%" Project**: A demoable, evaluated, observable, and containerized RAG system with multilingual capabilities.
+*   **Interview-Ready Skills**: ~25 coding problems solved, 3 system designs practiced, and all core CS concepts revised.
+*   **A Polished Narrative**: A crisp demo video and a rehearsed pitch to confidently present your work.

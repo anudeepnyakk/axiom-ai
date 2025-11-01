@@ -1,0 +1,20 @@
+{
+    "metrics": {
+        "map": 1.0,
+        "ndcg_cut_10": 1.0,
+        "ndcg_cut_5": 1.0,
+        "recall_10": 1.0,
+        "recall_5": 1.0
+    },
+    "results_per_query": {
+        "q1": {
+            "eval_doc_1.txt": 1.0
+        },
+        "q2": {
+            "eval_doc_1.txt": 1.0
+        },
+        "q3": {
+            "eval_doc_1.txt": 1.0
+        }
+    }
+}
