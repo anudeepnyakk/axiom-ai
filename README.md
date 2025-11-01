@@ -27,7 +27,7 @@ Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
 
 *See [docs/architecture.md](docs/architecture.md) for detailed design.*
 
----
+<!-- Screenshot placeholder: Add UI screenshot showing query + citation drawer -->
 
 ## Evaluation
 
