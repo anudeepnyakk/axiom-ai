@@ -82,6 +82,31 @@ PERSISTENCE_FIX.md
 UI_IMPROVEMENTS.md
 GITHUB_*.md
 
+# Personal development/learning notes
+21days.mkd
+Learning.mkd
+Blueprint.mkd
+Axiom v1.mkd
+Arch.md
+
+# Redundant setup docs (README/QUICKSTART covers this)
+START_HERE.md
+SETUP_NOW.md
+SIMPLE_START.txt
+WHAT_YOU_NEED.txt
+RUN_COMMANDS.txt
+ADD_DOCUMENTS.md
+PRE_LAUNCH_CHECKLIST.md
+
+# Temporary/duplicate scripts
+quick_ingest.py
+run_final_test.py
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
 # Temporary test files (root level)
 test_*.py
 verify_*.py
