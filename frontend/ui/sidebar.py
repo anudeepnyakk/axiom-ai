@@ -199,6 +199,6 @@ def render_sidebar():
         st.metric("Documents", len(processed_files))
         st.metric("Chunks", total_chunks)
 
-        st.subheader("🔍 Debug Tools")
+        st.subheader("🔧 Developer Tools")
         if st.button("Open Evidence Drawer"):
             st.session_state.drawer_open = True
