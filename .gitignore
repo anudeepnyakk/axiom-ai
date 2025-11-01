@@ -71,5 +71,20 @@ frontend/axiom.log
 # Project-specific
 project-axiom/
 
+# Internal documentation/completion reports
+*_COMPLETE.md
+*_COMPLETION*.md
+PROJECT_COMPLETION_REPORT.md
+BUGFIXES_COMPLETE.md
+FINISHING_TOUCHES_COMPLETE.md
+PERFORMANCE_IMPROVEMENTS.md
+PERSISTENCE_FIX.md
+UI_IMPROVEMENTS.md
+GITHUB_*.md
+
+# Temporary test files (root level)
+test_*.py
+verify_*.py
+
 # Docker
 .dockerignore
