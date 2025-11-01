@@ -5,15 +5,23 @@
 ![ChromaDB](https://img.shields.io/badge/vectorstore-ChromaDB-orange)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Multilingual RAG system with evaluated retrieval, fault tolerance, and secure-by-default design.
+High-fidelity RAG system with multilingual support, robust security, and observability.
 
 **Why it matters**: Separates retrieval evaluation from LLM synthesis, enabling measurable improvement and multilingual query support without translation.
+
+![Axiom AI Demo](docs/images/demo.gif)
+*Query interface with real-time citation tracking*
+
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
 export OPENAI_API_KEY="sk-your-key"
 python scripts/ingest.py && cd frontend && streamlit run app.py
 ```
+
+![System Architecture](docs/images/architecture-diagram.png)
+*End-to-end RAG pipeline with evaluated retrieval*
 
 ## Architecture
 
@@ -27,11 +35,9 @@ Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
 
 *See [docs/architecture.md](docs/architecture.md) for detailed design.*
 
-<!-- Screenshot placeholder: Add UI screenshot showing query + citation drawer -->
-
 ## Evaluation
 
-Tested on internal dataset (~30 queries per language):
+Baseline evaluated on ~30 queries per language for proof-of-concept:
 
 | Metric | English | Hindi |
 |--------|---------|-------|
@@ -70,8 +76,8 @@ Full security and evaluation documentation included under `/docs`.
 
 ## Future Work
 
-- Document reranking layer for improved precision
-- Multi-tenant data isolation
+- Reranking layer for improved precision
+- Multi-tenant isolation
 - Streaming LLM responses
 
 ---

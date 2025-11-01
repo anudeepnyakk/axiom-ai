@@ -89,7 +89,7 @@ Blueprint.mkd
 Axiom v1.mkd
 Arch.md
 
-# Redundant setup docs (README/QUICKSTART covers this)
+# Redundant setup docs (README covers this)
 START_HERE.md
 SETUP_NOW.md
 SIMPLE_START.txt
@@ -97,6 +97,10 @@ WHAT_YOU_NEED.txt
 RUN_COMMANDS.txt
 ADD_DOCUMENTS.md
 PRE_LAUNCH_CHECKLIST.md
+QUICKSTART.md
+
+# Draft diagram files (final diagram in docs/images/)
+axiom_system_diagram.md
 
 # Temporary/duplicate scripts
 quick_ingest.py
