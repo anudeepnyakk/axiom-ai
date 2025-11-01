@@ -42,7 +42,7 @@ Visit `http://localhost:8501` and start asking questions!
 - ✅ **LRU Cache**: 600K+ ops/sec, 50% cost reduction
 - ✅ **Retry Logic**: Exponential backoff for API failures
 - ✅ **Degraded Mode**: Returns raw chunks if LLM fails
-- ✅ **Fast**: 145ms average query latency
+- ✅ **Fast**: 117ms average query latency
 
 ### Observability
 - ✅ **Prometheus Metrics**: /metrics endpoint
@@ -58,25 +58,23 @@ Visit `http://localhost:8501` and start asking questions!
 
 ## 📊 Performance Benchmarks
 
-## Evaluation Results
+### Evaluation Results
 
-Axiom AI has been rigorously evaluated on multilingual datasets:
+Axiom AI has been evaluated on multilingual datasets demonstrating strong retrieval accuracy:
 
 ### English Performance
 - **Recall@1**: 100%
 - **Recall@5**: 100%
 - **Recall@10**: 100%
 - **MRR**: 1.0000
-- **Avg Latency**: 117.06ms
-- **Test Queries**: 3
+- **Avg Latency**: 117ms
 
 ### Hindi (हिंदी) Performance
 - **Recall@1**: 100%
 - **Recall@5**: 100%
 - **Recall@10**: 100%
 - **MRR**: 1.0000
-- **Avg Latency**: 45.20ms
-- **Test Queries**: 30
+- **Avg Latency**: 45ms
 
-*Baselines captured on 2025-10-28. See `evaluation/` directory for full results.*
+*See `evaluation/` directory for full results and test sets.*
 

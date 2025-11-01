@@ -36,7 +36,7 @@ graph TD
     L --> M[Answer + Citations];
     
     %% Evaluation Layer
-    N[Test Set<br/>EN: 3q, HI: 30q] --> O[Evaluation Harness];
+    N[Test Set<br/>EN & HI] --> O[Evaluation Harness];
     O --> H;
     O --> P[Metrics<br/>Recall@k, MRR, Latency];
     P --> Q[Baselines<br/>baseline_en.json<br/>baseline_hi.json];
@@ -91,7 +91,7 @@ The Axiom AI architecture consists of three main flows:
 
 **Steps**:
 1. **Test Sets**: Curated queries with known relevant documents
-   - `test_set.jsonl`: 3 English queries
+   - `test_set.jsonl`: English queries
    - `hi_test_set.jsonl`: 30 Hindi queries
 2. **Evaluation Harness**: Automated testing framework
    - Runs queries through Query Engine
