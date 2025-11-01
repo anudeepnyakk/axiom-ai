@@ -133,10 +133,10 @@ http://localhost:5000/health   # Health check
 
 ## 📚 Next Steps
 
-- Read `docs/architecture.md` for system design
-- Read `docs/EVAL.md` for evaluation details
-- Read `docs/SECURITY.md` for security features
-- Check `docs/DAY*_CHECKLIST.md` for implementation details
+- Read [Architecture Guide](docs/architecture.md) for system design
+- Read [Evaluation Guide](docs/EVAL.md) for evaluation methodology
+- Read [Security Guide](docs/SECURITY.md) for security features
+- Read [Docker Setup](DOCKER_SETUP.md) for deployment
 
 ---
 
@@ -146,7 +146,7 @@ Your RAG system is now running with:
 - ✅ Document ingestion
 - ✅ Vector search
 - ✅ LLM synthesis  
-- ✅ Beautiful UI
+- ✅ Web UI
 - ✅ Source citations
 - ✅ Security (PII redaction, API auth)
 - ✅ Performance (LRU cache)

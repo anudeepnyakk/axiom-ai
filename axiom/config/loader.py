@@ -57,7 +57,7 @@ class ConfigLoader:
                 return data if data is not None else {}
         except FileNotFoundError:
             # Use print for now, will be replaced with logging after setup
-            print(f"Warning: Config file {self.config_path} not found. Using defaults.")
+            self.logger.warning(f"Config file {self.config_path} not found. Using defaults.")
             return {}
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in {self.config_path}: {e}")
