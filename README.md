@@ -35,6 +35,9 @@ Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
 
 *See [docs/architecture.md](docs/architecture.md) for detailed design.*
 
+<img width="1920" height="897" alt="Screenshot 2025-11-01 170532" src="https://github.com/user-attachments/assets/2758b38c-4717-4cff-ae0a-a23361bb8fd5" />
+<img width="1920" height="891" alt="Screenshot 2025-11-01 170711" src="https://github.com/user-attachments/assets/3655f327-ecf6-451e-9548-4e665c2c5769" />
+
 ## Evaluation
 
 Baseline evaluated on ~30 queries per language for proof-of-concept:
