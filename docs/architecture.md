@@ -38,8 +38,8 @@ graph TD
     %% Evaluation Layer
     N[Test Set<br/>EN & HI] --> O[Evaluation Harness];
     O --> H;
-    O --> P[Metrics<br/>Recall@k, MRR, Latency];
-    P --> Q[Baselines<br/>baseline_en.json<br/>baseline_hi.json];
+    O --> P["Metrics<br/>Recall@k, MRR, Latency"];
+    P --> Q["Baselines<br/>baseline_en.json<br/>baseline_hi.json"];
     
     style F fill:#e1f5ff
     style H fill:#fff4e1
