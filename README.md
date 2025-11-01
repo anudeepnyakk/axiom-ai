@@ -9,9 +9,6 @@ High-fidelity RAG system with multilingual support, robust security, and observa
 
 **Why it matters**: Separates retrieval evaluation from LLM synthesis, enabling measurable improvement and multilingual query support without translation.
 
-![Axiom AI Demo](docs/images/demo.gif)
-*Query interface with real-time citation tracking*
-
 ## Quick Start
 
 ```bash
@@ -19,9 +16,6 @@ pip install -r requirements.txt
 export OPENAI_API_KEY="sk-your-key"
 python scripts/ingest.py && cd frontend && streamlit run app.py
 ```
-
-![System Architecture](docs/images/architecture-diagram.png)
-*End-to-end RAG pipeline with evaluated retrieval*
 
 ## Architecture
 
@@ -35,8 +29,8 @@ Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
 
 *See [docs/architecture.md](docs/architecture.md) for detailed design.*
 
-<img width="1920" height="897" alt="Screenshot 2025-11-01 170532" src="https://github.com/user-attachments/assets/2758b38c-4717-4cff-ae0a-a23361bb8fd5" />
-<img width="1920" height="891" alt="Screenshot 2025-11-01 170711" src="https://github.com/user-attachments/assets/3655f327-ecf6-451e-9548-4e665c2c5769" />
+<img width="1920" height="897" alt="Axiom AI Interface" src="https://github.com/user-attachments/assets/2758b38c-4717-4cff-ae0a-a23361bb8fd5" />
+<img width="1920" height="891" alt="Axiom AI Query Interface" src="https://github.com/user-attachments/assets/3655f327-ecf6-451e-9548-4e665c2c5769" />
 
 ## Evaluation
 
