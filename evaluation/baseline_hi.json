@@ -1,0 +1,13 @@
+{
+    "run_timestamp": "2025-10-28 19:18:37",
+    "language": "Hindi (हिंदी)",
+    "total_queries": 30,
+    "document_source": "evaluation/hi_test_data",
+    "metrics": {
+        "Recall@1": 1.0,
+        "Recall@5": 1.0,
+        "Recall@10": 1.0,
+        "MRR": 1.0,
+        "average_latency_ms": 45.19943396250407
+    }
+}

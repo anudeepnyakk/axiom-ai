@@ -1,0 +1,62 @@
+# Axiom v1 Configuration File
+# This file configures all aspects of the document ingestion pipeline
+
+# Document processing settings
+document_processing:
+  chunk_size: 800
+  chunk_overlap: 160
+  max_file_size_mb: 50
+
+# Embedding model settings
+embeddings:
+  model_name: "all-MiniLM-L6-v2"
+  batch_size: 32
+  device: "cpu"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  log_file: "axiom.log"
+  log_to_console: true
+  log_to_file: true
+  log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# State tracker configuration
+state_tracker:
+  db_path: "axiom_state.db"
+  auto_cleanup_days: 30
+
+vector_store:
+  persist_directory: "./chroma_db/axiom_documents"
+
+api_keys:
+  openai: "${OPENAI_API_KEY}"  # Set via environment variable or .env file
+
+# Configuration for OpenAI API
+openai_config:
+  api_key: "${OPENAI_API_KEY}"
+  embedding_model: "text-embedding-3-small"
+  completion_model: "gpt-4o"
+
+# Pluggable configuration for embedding generation
+embedding:
+  provider: "openai"  # Can be "openai" or "local"
+  
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    embedding_model: "text-embedding-3-small"
+  
+  local:
+    # Example for a local sentence-transformer model
+    model_name: "paraphrase-multilingual-MiniLM-L12-v2"
+
+# Configuration for Chroma Vector Store
+chroma_config:
+  host: "localhost"
+  port: 8000
+  collection_name: "axiom_documents"
+  persist_directory: "./axiom_db"
+
+# Directory where uploaded documents will be stored
+data_dir: "axiom/data"
+

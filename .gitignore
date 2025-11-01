@@ -1,0 +1,75 @@
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Database & Vector Stores
+chroma_db/
+chroma_db_*/
+test_chroma_db/
+*.db
+*.sqlite3
+*.pickle
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+frontend/*.log
+axiom/logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Frontend build artifacts
+frontend/chroma_db/
+frontend/uploaded_documents/
+frontend/processed_files.json
+frontend/axiom_state.db
+frontend/axiom.log
+
+# Project-specific
+project-axiom/
+
+# Docker
+.dockerignore
