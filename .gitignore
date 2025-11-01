@@ -111,9 +111,9 @@ run_final_test.py
 dist/
 build/
 
-# Temporary test files (root level)
-test_*.py
-verify_*.py
+# Temporary test files (root level only - tests/ directory is tracked)
+/test_*.py
+/verify_*.py
 
 # Docker
 .dockerignore
