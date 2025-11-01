@@ -5,104 +5,77 @@
 ![ChromaDB](https://img.shields.io/badge/vectorstore-ChromaDB-orange)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-A robust RAG (Retrieval-Augmented Generation) system with security, observability, and fault tolerance.
+Multilingual RAG system with evaluated retrieval, fault tolerance, and secure-by-default design.
 
-## 🚀 Quick Start
+**Why it matters**: Separates retrieval evaluation from LLM synthesis, enabling measurable improvement and multilingual query support without translation.
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
-
-# 2. Set OpenAI API key
 export OPENAI_API_KEY="sk-your-key"
-
-# 3. Ingest documents
-python scripts/ingest.py
-
-# 4. Run frontend
-cd frontend && streamlit run app.py
+python scripts/ingest.py && cd frontend && streamlit run app.py
 ```
 
-Visit `http://localhost:8501` and start asking questions!
+## Architecture
 
-**Full guide**: See [QUICKSTART.md](QUICKSTART.md)
+```
+Documents → Chunker → Embeddings → ChromaDB
+                                    ↓
+Query → Embed → Vector Search → Top-K → LLM → Answer + Citations
+```
 
----
+**Components**: Modular document processor, multilingual embedding generator (all-MiniLM-L6-v2), ChromaDB vector store, GPT-4o-mini synthesis with strict source citations.
 
-## 🎯 Key Features
-
-### Core RAG Pipeline
-- ✅ **Document Ingestion**: PDF & TXT loaders
-- ✅ **Vector Search**: ChromaDB integration
-- ✅ **LLM Synthesis**: OpenAI GPT-4o-mini
-- ✅ **Local Embeddings**: Cost-effective all-MiniLM-L6-v2
-- ✅ **Multilingual**: English + Hindi support
-
-### Security
-- ✅ **PII Redaction**: Automatic email/phone/SSN removal from logs
-- ✅ **API Authentication**: Constant-time key comparison (prevents timing attacks)
-- ✅ **Container Security**: Non-root user, multi-stage builds
-
-### Performance & Reliability
-- ✅ **LRU Cache**: 600K+ ops/sec, 50% cost reduction
-- ✅ **Retry Logic**: Exponential backoff for API failures
-- ✅ **Degraded Mode**: Returns raw chunks if LLM fails
-- ✅ **Query Latency**: ~150ms (cached), ~500ms (with LLM synthesis)
-
-### Observability
-- ✅ **Prometheus Metrics**: /metrics endpoint
-- ✅ **JSON Logging**: Structured logs with request IDs
-- ✅ **Distributed Tracing**: Request ID correlation across pipeline stages
-
-### Infrastructure
-- ✅ **Docker**: Multi-stage builds, containerized deployment
-- ✅ **CI/CD**: GitHub Actions (<120s pipeline)
-- ✅ **Documentation**: Architecture diagrams, evaluation methodology, security design
+*See [docs/architecture.md](docs/architecture.md) for detailed design.*
 
 ---
 
-## 📊 Performance Benchmarks
+## Evaluation
 
-### Evaluation Results
+Tested on internal dataset (~30 queries per language):
 
-Tested on small internal dataset (~30 queries per language) for baseline benchmarking:
+| Metric | English | Hindi |
+|--------|---------|-------|
+| Recall@5 | 0.97 | 0.93 |
+| MRR | 0.92 | 0.87 |
+| Latency | 145ms | 155ms |
 
-### English Performance
-- **Recall@1**: 0.91
-- **Recall@5**: 0.97
-- **Recall@10**: 0.99
-- **MRR**: 0.92
-- **Avg Latency**: 145ms (retrieval only)
-
-### Hindi (हिंदी) Performance
-- **Recall@1**: 0.85
-- **Recall@5**: 0.93
-- **Recall@10**: 0.97
-- **MRR**: 0.87
-- **Avg Latency**: 155ms (retrieval only)
-
-*See [Evaluation Guide](docs/EVAL.md) for methodology and [evaluation/](evaluation/) for full results.*
+*Retrieval-only evaluation. See [docs/EVAL.md](docs/EVAL.md) for methodology.*
 
 ---
 
-## 📚 Documentation
+## Features
 
-- **[Architecture](docs/architecture.md)**: System design and component details
-- **[Evaluation](docs/EVAL.md)**: Metrics methodology and baseline results
-- **[Security](docs/SECURITY.md)**: Security features and threat model
-- **[Docker Setup](DOCKER_SETUP.md)**: Deployment guide
+**Fault Tolerance**: Retry logic with exponential backoff, degraded mode when LLM unavailable.
 
----
+**Secure by Default**: PII redaction in logs, constant-time API key comparison, non-root containers.
 
-## 🔮 Future Work
+**Evaluated Retrieval**: Metrics-driven approach with Recall@k, MRR, latency tracking across languages.
 
-- Reranking layer for improved precision
-- Support for additional document formats (DOCX, Markdown)
-- Streaming responses for faster UX
-- Multi-tenant support with user isolation
+**Docker Reproducible**: Multi-stage builds, containerized deployment, CI/CD validation.
+
+**Observability**: Prometheus metrics, JSON logging with request ID correlation, distributed tracing.
 
 ---
 
-## 📄 License
+## Documentation
+
+- [Architecture](docs/architecture.md) - System design and component details
+- [Evaluation](docs/EVAL.md) - Metrics methodology and baseline results  
+- [Security](docs/SECURITY.md) - Security features and threat model
+- [Docker Setup](DOCKER_SETUP.md) - Deployment guide
+
+Full security and evaluation documentation included under `/docs`.
+
+---
+
+## Future Work
+
+- Document reranking layer for improved precision
+- Multi-tenant data isolation
+- Streaming LLM responses
+
+---
+
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
