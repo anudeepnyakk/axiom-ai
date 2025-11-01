@@ -65,7 +65,7 @@ Baseline evaluated on ~30 queries per language for proof-of-concept:
 - [Architecture](docs/architecture.md) - System design and component details
 - [Evaluation](docs/EVAL.md) - Metrics methodology and baseline results  
 - [Security](docs/SECURITY.md) - Security features and threat model
-- [Docker Setup](DOCKER_SETUP.md) - Deployment guide
+- [Docker Setup](docs/DOCKER_SETUP.md) - Deployment guide
 
 Full security and evaluation documentation included under `/docs`.
 
