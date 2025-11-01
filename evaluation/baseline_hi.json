@@ -1,17 +1,12 @@
 {
-    "run_timestamp": "2025-10-28 19:18:37",
-    "language": "Hindi (हिंदी)",
-    "total_queries": 30,
+    "run_timestamp": "2025-09-23 19:44:35",
+    "total_queries": 3,
     "document_source": "evaluation/hi_test_data",
     "metrics": {
-        "Recall@1": 0.85,
-        "Recall@5": 0.93,
-        "Recall@10": 0.97,
-        "MRR": 0.87,
-        "precision@5": 0.58,
-        "ndcg@10": 0.82,
-        "avg_latency_ms": 155,
-        "p95_latency_ms": 240,
-        "p99_latency_ms": 380
+        "Recall@1": 1.0,
+        "Recall@5": 1.0,
+        "Recall@10": 1.0,
+        "MRR": 1.0,
+        "average_latency_ms": 69.41358248392741
     }
 }
