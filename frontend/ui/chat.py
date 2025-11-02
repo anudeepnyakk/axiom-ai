@@ -11,8 +11,7 @@ def init_state():
 def render_chat():
     init_state()
     
-    # Get query engine from parent app
-    query_engine = st.session_state.get('query_engine')
+    # Backend connection handled in parent app
 
     # render history with proper chat layout
     for i, item in enumerate(st.session_state.chat_history):
@@ -65,19 +64,29 @@ def render_chat():
     if sent and text.strip():
         st.session_state.chat_history.append(("user", text))
         
-        # Query backend if available
-        if query_engine:
+        # Get backend URL from session state
+        backend_url = st.session_state.get('backend_url')
+        backend_connected = st.session_state.get('backend_connected', False)
+        
+        # Query backend API if available
+        if backend_connected and backend_url:
             with st.spinner("🔍 Searching knowledge base..."):
                 try:
-                    result = query_engine.query(text, top_k=3)  # Reduced to 3 for speed
-                    answer = result.answer
-                    sources = [{"text": chunk.text[:200] + "...", "metadata": chunk.metadata} 
-                              for chunk in result.context_chunks]
+                    import requests
+                    response = requests.post(
+                        f"{backend_url}/api/query",
+                        json={"question": text, "top_k": 3},
+                        timeout=30
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+                    answer = result.get("answer", "No answer returned.")
+                    sources = result.get("sources", [])
                     st.session_state.chat_history.append(("bot", answer, sources))
                 except Exception as e:
-                    error_msg = f"⚠️ Error: {str(e)}\n\nPlease make sure documents are ingested."
+                    error_msg = f"⚠️ Error: {str(e)}\n\nPlease check backend connection."
                     st.session_state.chat_history.append(("bot", error_msg, []))
         else:
-            st.session_state.chat_history.append(("bot", "⚠️ Backend not connected. Please check configuration.", []))
+            st.session_state.chat_history.append(("bot", "⚠️ Backend not connected. Please set BACKEND_URL environment variable.", []))
         
         st.rerun()

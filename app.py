@@ -1,55 +1,72 @@
 """
-Axiom AI - HuggingFace Spaces Entry Point
+Axiom AI - Frontend Only for HuggingFace Spaces
 
-This file serves as the entry point for HuggingFace Spaces deployment.
-It auto-initializes sample documents if the vector store is empty,
-then imports and runs the Streamlit app from the frontend directory.
+This app calls the backend API.
+Backend should be deployed separately (Railway, Render, Fly.io, etc.)
 """
 
-import sys
+import streamlit as st
+import requests
 import os
-from pathlib import Path
+from ui.theme import apply_theme
+from ui.sidebar import render_sidebar
+from ui.chat import render_chat
+from ui.drawer import render_drawer
+from ui.documents import render_documents
+from ui.status import render_status
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
+st.set_page_config(page_title="Axiom Enterprise", layout="wide")
 
-# Auto-initialize sample documents for HuggingFace Spaces
-def initialize_space():
-    """Initialize sample documents if vector store is empty"""
+apply_theme()
+
+# Backend API URL (set via environment variable)
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+def check_backend():
+    """Check if backend is reachable"""
     try:
-        from axiom.config.loader import load_config
-        from axiom.core.vector_store import ChromaVectorStore
-        from axiom.core.factory import create_vector_store
-        
-        config = load_config()
-        
-        # Check if vector store has any documents
-        vector_store = create_vector_store(config)
-        
-        # Check if store is empty
-        try:
-            count = vector_store.count("axiom_documents")
-            if count == 0:
-                raise ValueError("Empty store")
-        except:
-            # Vector store is empty or doesn't exist - initialize samples
-            print("📚 Initializing sample documents for HuggingFace Space...")
-            
-            # Run preparation script
-            from scripts.prepare_space import ingest_sample_documents
-            ingest_sample_documents()
-            print("✅ Sample documents initialized!")
-            
-    except Exception as e:
-        # If initialization fails, continue anyway (user can upload docs)
-        print(f"⚠️ Could not auto-initialize: {e}")
-        print("💡 Users can upload documents via the sidebar")
+        response = requests.get(f"{BACKEND_URL}/health", timeout=5)
+        return response.status_code == 200, None
+    except:
+        return False, "Backend not reachable"
 
-# Only initialize on first run (check env var)
-if os.getenv("SPACE_INITIALIZED") != "true":
-    initialize_space()
-    os.environ["SPACE_INITIALIZED"] = "true"
+backend_connected, backend_error = check_backend()
 
-# Import and run the Streamlit app
-from frontend.app import *
+status_class = "health-dot" if backend_connected else "health-dot-error"
+status_text = "Backend Connected" if backend_connected else "Backend Offline"
 
+st.markdown(f"""
+<div class="header">
+  <div class="header-left">
+    <span class="logo">AXIOM</span>
+    <span class="tagline">Grounded intelligence.</span>
+  </div>
+  <div class="header-right">
+    <span class="{status_class}"></span>
+    <span class="health-text">{status_text}</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+if not backend_connected:
+    st.warning(f"⚠️ Backend not connected. Set BACKEND_URL in Settings → Variables")
+    st.info(f"Current: `{BACKEND_URL}`")
+
+st.session_state['backend_url'] = BACKEND_URL
+st.session_state['backend_connected'] = backend_connected
+
+render_sidebar()
+
+tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
+
+with tab1:
+    render_chat()
+
+with tab2:
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        render_documents()
+    with col2:
+        render_status()
+
+render_drawer()

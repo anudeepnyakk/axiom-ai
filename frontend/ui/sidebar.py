@@ -6,8 +6,7 @@ import os
 import json
 import hashlib
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# No backend imports needed for HF Spaces
 
 # Persistent storage for uploaded documents
 # Use absolute path relative to frontend directory
@@ -60,26 +59,17 @@ def remove_document(filename):
         # This prevents citation glitches with wrong/old documents
         # Simplified for speed - just mark as removed, embeddings cleaned on next query
         try:
-            # Try quick cleanup but don't block on it
-            from axiom.config.loader import load_config
-            from axiom.core.factory import create_query_engine
-            
-            config = load_config()
-            
-            # Quick check if we can access vector store
-            if hasattr(config, 'vector_store'):
-                query_engine = create_query_engine(config)
-                collection = query_engine.vector_store._collection
-                
-                # Quick delete without full scan (faster!)
-                # Get IDs with WHERE filter
-                try:
-                    results = collection.get(where={"source_file_path": {"$contains": filename}})
-                    if results and 'ids' in results and results['ids']:
-                        collection.delete(ids=results['ids'])
-                except:
-                    # If filter fails, skip vector cleanup (file is already removed)
-                    pass
+            # For HF Spaces: Delete via backend API
+            import requests
+            backend_url = st.session_state.get('backend_url', 'http://localhost:8000')
+            try:
+                response = requests.delete(
+                    f"{backend_url}/api/documents/{filename}",
+                    timeout=10
+                )
+                # Don't fail if backend unavailable
+            except:
+                pass
         except Exception:
             # Silently fail - document is removed from tracking, that's good enough
             pass
@@ -150,13 +140,20 @@ def render_sidebar():
                         with open(file_path, 'wb') as f:
                             f.write(uploaded_file.getvalue())
                         
-                        # Import and process
-                        from axiom.core.factory import create_document_processor
-                        from axiom.config.loader import load_config
+                        # For HF Spaces: Upload via backend API instead
+                        import requests
+                        backend_url = st.session_state.get('backend_url', 'http://localhost:8000')
                         
-                        config = load_config()
-                        processor = create_document_processor(config)
-                        chunks = processor.process_document(str(file_path))
+                        # Upload file to backend
+                        files = {'file': (uploaded_file.name, uploaded_file.getvalue())}
+                        response = requests.post(
+                            f"{backend_url}/api/upload",
+                            files=files,
+                            timeout=60
+                        )
+                        response.raise_for_status()
+                        result = response.json()
+                        chunks = result.get('chunks', [])
                         
                         # Mark as processed (persistent)
                         mark_file_processed(uploaded_file.name, len(chunks) if chunks else 0)
