@@ -1,0 +1,8 @@
+AxiomAI is a powerful Retrieval-Augmented Generation (RAG) system.
+It was designed by a team of dedicated AI engineers.
+Its primary function is to answer questions based on a given set of documents.
+The core components include a document processor, an embedding generator,
+a vector store, and an LLM synthesizer. The system is designed to be
+modular and configurable, allowing different components to be swapped out.
+For example, it can use OpenAI's GPT-4 or local models for synthesis.
+The project's mascot is a wise owl named 'Lexi'.

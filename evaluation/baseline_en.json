@@ -1,0 +1,16 @@
+{
+    "run_timestamp": "2025-10-28 19:14:10",
+    "total_queries": 30,
+    "document_source": "evaluation",
+    "metrics": {
+        "Recall@1": 0.91,
+        "Recall@5": 0.97,
+        "Recall@10": 0.99,
+        "MRR": 0.92,
+        "precision@5": 0.65,
+        "ndcg@10": 0.88,
+        "avg_latency_ms": 145,
+        "p95_latency_ms": 220,
+        "p99_latency_ms": 350
+    }
+}

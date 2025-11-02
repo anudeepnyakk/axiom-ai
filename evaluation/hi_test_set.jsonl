@@ -1,0 +1,30 @@
+{"query_id": "hi_q1", "query": "एक्सिओम एआई क्या है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q2", "query": "RAG प्रणाली के मुख्य घटक क्या हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q3", "query": "एक्सिओम एआई कौन सी भाषाओं का समर्थन करता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q4", "query": "वेक्टर स्टोर किसके लिए उपयोग किया जाता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q5", "query": "प्रणाली कौन सा डेटाबेस उपयोग करती है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q6", "query": "दस्तावेज़ प्रोसेसर का क्या काम है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q7", "query": "एम्बेडिंग जेनरेटर क्या करता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q8", "query": "रिकॉल@5 मीट्रिक क्या मापता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q9", "query": "MRR का पूर्ण रूप क्या है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q10", "query": "प्रणाली में कितने मुख्य तकनीकी घटक हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q11", "query": "एलएलएम सिंथेसाइज़र का उद्देश्य क्या है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q12", "query": "क्या प्रणाली स्थानीय मॉडल का समर्थन करती है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q13", "query": "डेटा सुरक्षा कैसे सुनिश्चित की जाती है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q14", "query": "क्या दस्तावेज़ स्थानीय रूप से संसाधित किए जाते हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q15", "query": "PII पहचान क्या है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q16", "query": "प्रणाली स्केलेबल कैसे है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q17", "query": "बैच प्रसंस्करण का क्या अर्थ है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q18", "query": "विलंबता से क्या मतलब है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q19", "query": "एक्सिओम के डिज़ाइन सिद्धांत क्या हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q20", "query": "क्या प्रत्येक घटक स्वतंत्र रूप से परीक्षण योग्य है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q21", "query": "भविष्य में कौन सी नई सुविधाएं जोड़ी जाएंगी?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q22", "query": "रीयल-टाइम अपडेट क्या हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q23", "query": "मल्टी-टेनेंट का क्या मतलब है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q24", "query": "पुनर्रैंकिंग एल्गोरिदम क्यों महत्वपूर्ण हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q25", "query": "उपयोगकर्ता हिंदी में प्रश्न कैसे पूछ सकता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q26", "query": "स्रोत उद्धरण क्यों प्रदान किए जाते हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q27", "query": "संदर्भ-जागरूक उत्तर क्या होते हैं?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q28", "query": "क्वेरी इंजन क्या समन्वयित करता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q29", "query": "OpenAI के साथ एकीकरण कैसे होता है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}
+{"query_id": "hi_q30", "query": "एक्सिओम एआई प्रणाली मूल्यांकन योग्य क्यों है?", "relevant_doc_ids": ["hindi_doc_1.txt"]}

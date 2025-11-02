@@ -1,0 +1,9 @@
+# Dependencies for evaluation and development
+pytrec_eval
+pytest
+pytest-cov
+pytest-timeout
+black
+flake8
+isort
+mypy

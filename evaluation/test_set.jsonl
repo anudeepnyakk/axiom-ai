@@ -1,0 +1,3 @@
+{"query_id": "q1", "query": "What is the primary function of AxiomAI?", "relevant_doc_ids": ["eval_doc_1.txt"]}
+{"query_id": "q2", "query": "What are the core components of the RAG system?", "relevant_doc_ids": ["eval_doc_1.txt"]}
+{"query_id": "q3", "query": "What is the name of the project's mascot?", "relevant_doc_ids": ["eval_doc_1.txt"]}
