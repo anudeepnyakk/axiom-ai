@@ -1,5 +1,5 @@
-# Dockerfile for HuggingFace Spaces (Docker SDK + Streamlit Template)
-# Optimized for HuggingFace Spaces deployment
+# Dockerfile for Backend API Server (Railway/Render/Fly.io)
+# Optimized for backend deployment
 
 FROM python:3.11-slim
 
@@ -10,35 +10,43 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libgomp1 \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for better caching)
-COPY requirements-streamlit.txt .
-
-# Install Python dependencies
+# Copy only backend requirements (not streamlit)
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-streamlit.txt
+    pip install --no-cache-dir flask prometheus-client requests
 
-# Copy application code
-COPY . .
+# Install backend dependencies
+RUN pip install --no-cache-dir \
+    sentence-transformers \
+    chromadb \
+    tiktoken \
+    pypdf \
+    PyYAML \
+    numpy \
+    scikit-learn \
+    chardet \
+    openai
+
+# Copy only backend code (exclude frontend)
+COPY axiom/ ./axiom/
+COPY scripts/start_metrics_server.py ./scripts/
+COPY config.yaml .
 
 # Create necessary directories
-RUN mkdir -p chroma_db axiom/data_samples logs
+RUN mkdir -p chroma_db logs
 
-# Expose Streamlit port (HuggingFace Spaces uses 7860)
-EXPOSE 7860
+# Expose port (Railway uses PORT env var)
+EXPOSE 5000
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV STREAMLIT_SERVER_PORT=7860
-ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
-ENV STREAMLIT_SERVER_HEADLESS=true
-ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Health check (HuggingFace Spaces compatible)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:7860/_stcore/health || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=5)" || exit 1
 
-# Run Streamlit app (HuggingFace Spaces convention: streamlit_app.py)
-CMD streamlit run streamlit_app.py --server.port=7860 --server.address=0.0.0.0 --server.headless=true
+# Run Flask server (Railway provides PORT env var)
+CMD python scripts/start_metrics_server.py
+
