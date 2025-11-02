@@ -66,23 +66,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-timeout
+          pip install -r requirements-dev.txt
       
-      - name: Run PII Redaction Tests
-        run: python scripts/test_pii_redaction.py
-        timeout-minutes: 2
-      
-      - name: Run API Auth Tests
-        run: python scripts/test_api_auth.py
-        timeout-minutes: 2
-      
-      - name: Run LRU Cache Tests
-        run: python scripts/test_lru_cache.py
-        timeout-minutes: 2
-      
-      - name: Run Retry Logic Tests
-        run: python scripts/test_retry_logic.py
-        timeout-minutes: 2
+      - name: Run unit tests with pytest
+        run: |
+          pytest tests/ -v --tb=short
+        timeout-minutes: 10
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
