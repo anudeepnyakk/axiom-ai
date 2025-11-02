@@ -8,12 +8,12 @@ Backend should be deployed separately (Railway, Render, Fly.io, etc.)
 import streamlit as st
 import requests
 import os
-from ui.theme import apply_theme
-from ui.sidebar import render_sidebar
-from ui.chat import render_chat
-from ui.drawer import render_drawer
-from ui.documents import render_documents
-from ui.status import render_status
+from frontend.ui.theme import apply_theme
+from frontend.ui.sidebar import render_sidebar
+from frontend.ui.chat import render_chat
+from frontend.ui.drawer import render_drawer
+from frontend.ui.documents import render_documents
+from frontend.ui.status import render_status
 
 st.set_page_config(page_title="Axiom Enterprise", layout="wide")
 

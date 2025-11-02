@@ -1,12 +1,10 @@
+# No backend imports needed for HF Spaces
 import streamlit as st
-import sys
 from pathlib import Path
 import tempfile
 import os
 import json
 import hashlib
-
-# No backend imports needed for HF Spaces
 
 # Persistent storage for uploaded documents
 # Use absolute path relative to frontend directory
