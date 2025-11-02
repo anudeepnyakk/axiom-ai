@@ -26,7 +26,8 @@ from axiom.metrics_server import run_server
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('METRICS_PORT', '5000'))
+    # Railway provides PORT env var, fallback to METRICS_PORT or 5000
+    port = int(os.getenv('PORT', os.getenv('METRICS_PORT', '5000')))
     
     print("=" * 60)
     print("AXIOM AI - METRICS SERVER")
