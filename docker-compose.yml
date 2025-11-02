@@ -29,8 +29,10 @@ services:
     container_name: axiom-backend
     ports:
       - "5000:5000"  # Metrics server
-      - "8000:8000"  # Future: API server
     environment:
+      # Metrics Server Configuration
+      - METRICS_PORT=5000
+      
       # OpenAI Configuration
       - OPENAI_API_KEY=${OPENAI_API_KEY:?error}
       

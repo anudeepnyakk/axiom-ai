@@ -12,7 +12,7 @@ The /metrics endpoint returns:
 Usage:
     python -m axiom.metrics_server
     
-Then visit: http://localhost:8000/metrics
+Then visit: http://localhost:5000/metrics
 """
 
 import logging
@@ -100,23 +100,23 @@ def index():
         <h2>Example Usage:</h2>
         <pre>
 # View metrics in browser
-http://localhost:8000/metrics
+http://localhost:5000/metrics
 
 # Query with curl
-curl http://localhost:8000/metrics
+curl http://localhost:5000/metrics
 
 # Configure Prometheus scraper
 scrape_configs:
   - job_name: 'axiom-ai'
     static_configs:
-      - targets: ['localhost:8000']
+      - targets: ['localhost:5000']
         </pre>
     </body>
     </html>
     """
 
 
-def run_server(host='0.0.0.0', port=8000, debug=False):
+def run_server(host='0.0.0.0', port=5000, debug=False):
     """
     Start the metrics server.
     

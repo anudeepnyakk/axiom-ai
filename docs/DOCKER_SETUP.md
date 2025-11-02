@@ -47,9 +47,10 @@ docker-compose ps
 docker-compose logs -f axiom-backend
 docker-compose logs -f chromadb
 
-# Check metrics endpoint
+# Check metrics endpoint (port 5000)
 curl http://localhost:5000/metrics
 curl http://localhost:5000/health
+curl http://localhost:5000/
 ```
 
 ---
