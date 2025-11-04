@@ -23,22 +23,23 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 
     torch torchvision torchaudio
 
 # Install lightweight dependencies first
+# Note: Quote packages with < to prevent shell redirection
 RUN pip install --no-cache-dir \
-    flask>=2.3.0 \
-    prometheus-client>=0.18.0 \
-    requests>=2.31.0 \
-    openai<2.0.0 \
-    pypdf>=3.0.0 \
-    tiktoken>=0.5.0 \
-    PyYAML>=6.0 \
-    numpy<2.0 \
-    scikit-learn>=1.3.0 \
-    chardet>=5.0.0
+    "flask>=2.3.0" \
+    "prometheus-client>=0.18.0" \
+    "requests>=2.31.0" \
+    "openai<2.0.0" \
+    "pypdf>=3.0.0" \
+    "tiktoken>=0.5.0" \
+    "PyYAML>=6.0" \
+    "numpy<2.0" \
+    "scikit-learn>=1.3.0" \
+    "chardet>=5.0.0"
 
 # Install heavy ML dependencies last (after torch is already installed)
 RUN pip install --no-cache-dir \
-    sentence-transformers==2.7.0 \
-    chromadb<0.5
+    "sentence-transformers==2.7.0" \
+    "chromadb<0.5"
 
 # Copy only backend code (exclude frontend via .dockerignore)
 COPY axiom/ ./axiom/
