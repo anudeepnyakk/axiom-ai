@@ -1,6 +1,6 @@
 # Dockerfile for Backend API Server (Railway/Render/Fly.io)
-# Optimized for backend deployment - backend-only dependencies
-# Updated: 2025-11-02 - Force rebuild to fix Railway timeout
+# Optimized for backend deployment - CPU-only, smaller dependencies
+# Updated: 2025-11-02 - Fixed Railway timeout with CPU-only torch
 
 FROM python:3.11-slim
 
@@ -14,12 +14,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements first (for better layer caching)
-COPY requirements-backend.txt .
+# Install pip first (for better caching)
+RUN pip install --no-cache-dir --upgrade pip
 
-# Install backend dependencies only (excludes frontend deps like nicegui/streamlit)
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-backend.txt
+# Install CPU-only PyTorch first (smaller, faster than CUDA version)
+# This prevents sentence-transformers from pulling the huge CUDA torch
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+    torch torchvision torchaudio
+
+# Install lightweight dependencies first
+RUN pip install --no-cache-dir \
+    flask>=2.3.0 \
+    prometheus-client>=0.18.0 \
+    requests>=2.31.0 \
+    openai<2.0.0 \
+    pypdf>=3.0.0 \
+    tiktoken>=0.5.0 \
+    PyYAML>=6.0 \
+    numpy<2.0 \
+    scikit-learn>=1.3.0 \
+    chardet>=5.0.0
+
+# Install heavy ML dependencies last (after torch is already installed)
+RUN pip install --no-cache-dir \
+    sentence-transformers==2.7.0 \
+    chromadb<0.5
 
 # Copy only backend code (exclude frontend via .dockerignore)
 COPY axiom/ ./axiom/
