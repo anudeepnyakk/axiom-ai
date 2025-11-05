@@ -65,8 +65,30 @@ def render_chat():
     if sent and text.strip():
         st.session_state.chat_history.append(("user", text))
         
-        # Query backend if available
-        if query_engine:
+        # Check if we're in HuggingFace mode (API-based)
+        backend_url = st.session_state.get('backend_url')
+        backend_connected = st.session_state.get('backend_connected', False)
+        
+        if backend_connected and backend_url:
+            # HuggingFace mode: use API calls
+            with st.spinner("🔍 Searching knowledge base..."):
+                try:
+                    import requests
+                    response = requests.post(
+                        f"{backend_url}/api/query",
+                        json={"question": text, "top_k": 3},
+                        timeout=30
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+                    answer = result.get("answer", "No answer returned.")
+                    sources = result.get("sources", [])
+                    st.session_state.chat_history.append(("bot", answer, sources))
+                except Exception as e:
+                    error_msg = f"⚠️ Error: {str(e)}\n\nPlease check backend connection."
+                    st.session_state.chat_history.append(("bot", error_msg, []))
+        elif query_engine:
+            # Local mode: use query engine directly
             with st.spinner("🔍 Searching knowledge base..."):
                 try:
                     result = query_engine.query(text, top_k=3)  # Reduced to 3 for speed
