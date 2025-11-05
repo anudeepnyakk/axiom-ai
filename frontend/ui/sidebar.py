@@ -125,10 +125,7 @@ def render_sidebar():
         if not can_upload:
             st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
         
-        if HF_MODE:
-            backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
-            st.info(f"📝 Upload documents to backend: `{backend_url}`")
-        
+        # File uploader (works for both local and HuggingFace mode)
         uploaded_files = st.file_uploader(
             "Documents",
             accept_multiple_files=True,
