@@ -6,8 +6,12 @@ import os
 import json
 import hashlib
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Check if we're in HuggingFace mode (frontend-only)
+HF_MODE = os.getenv("BACKEND_URL") is not None and os.getenv("BACKEND_URL") != "http://localhost:8000"
+
+# Add parent directory to path only if not in HF mode
+if not HF_MODE:
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Persistent storage for uploaded documents
 # Use absolute path relative to frontend directory
@@ -121,14 +125,18 @@ def render_sidebar():
         if not can_upload:
             st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
         
-        uploaded_files = st.file_uploader(
-            "Documents",
-            accept_multiple_files=True,
-            key="upload_docs",
-            type=['pdf', 'txt'],
-            help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
-            disabled=not can_upload
-        )
+        if HF_MODE:
+            st.info("📝 Upload documents via backend API endpoint `/api/upload`")
+            uploaded_files = []
+        else:
+            uploaded_files = st.file_uploader(
+                "Documents",
+                accept_multiple_files=True,
+                key="upload_docs",
+                type=['pdf', 'txt'],
+                help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
+                disabled=not can_upload
+            )
         
         # Handle file upload
         if uploaded_files and can_upload:
@@ -150,7 +158,11 @@ def render_sidebar():
                         with open(file_path, 'wb') as f:
                             f.write(uploaded_file.getvalue())
                         
-                        # Import and process
+                        # Import and process (skip if in HuggingFace mode)
+                        if HF_MODE:
+                            st.warning("⚠️ Document upload not available in HuggingFace Space. Use backend API directly.")
+                            continue
+                        
                         from axiom.core.factory import create_document_processor
                         from axiom.config.loader import load_config
                         
