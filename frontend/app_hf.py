@@ -8,16 +8,29 @@ Backend should be deployed separately (Railway, Render, Fly.io, etc.)
 import streamlit as st
 import requests
 import os
-from ui.theme import apply_theme
-from ui.sidebar import render_sidebar
-from ui.chat import render_chat  # Use regular chat, but it checks backend_connected
-from ui.drawer import render_drawer
-from ui.documents import render_documents
-from ui.status import render_status
+import traceback
 
+# Set page config first
 st.set_page_config(page_title="Axiom Enterprise", layout="wide")
 
-apply_theme()
+# Try to import UI components with error handling
+try:
+    from ui.theme import apply_theme
+    from ui.sidebar import render_sidebar
+    from ui.chat import render_chat
+    from ui.drawer import render_drawer
+    from ui.documents import render_documents
+    from ui.status import render_status
+except Exception as e:
+    st.error(f"⚠️ Import Error: {str(e)}")
+    st.code(traceback.format_exc())
+    st.stop()
+
+try:
+    apply_theme()
+except Exception as e:
+    st.warning(f"⚠️ Theme Error: {str(e)}")
+    # Continue anyway
 
 # Backend API URL (set via environment variable or default)
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
@@ -44,8 +57,13 @@ def check_backend_status():
     except Exception as e:
         return False, str(e)
 
-# Initialize backend status
-backend_connected, backend_error = check_backend_status()
+# Initialize backend status (with error handling)
+try:
+    backend_connected, backend_error = check_backend_status()
+except Exception as e:
+    backend_connected = False
+    backend_error = str(e)
+    st.warning(f"⚠️ Backend check failed: {backend_error}")
 
 if backend_connected:
     status_class = "health-dot"
@@ -77,22 +95,44 @@ if not backend_connected:
 st.session_state['backend_url'] = BACKEND_URL
 st.session_state['backend_connected'] = backend_connected
 
-render_sidebar()
+# Render UI components with error handling
+try:
+    render_sidebar()
+except Exception as e:
+    st.error(f"⚠️ Sidebar Error: {str(e)}")
+    st.code(traceback.format_exc())
 
-tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
+try:
+    tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
 
-with tab1:
-    render_chat()
+    with tab1:
+        try:
+            render_chat()
+        except Exception as e:
+            st.error(f"⚠️ Chat Error: {str(e)}")
+            st.code(traceback.format_exc())
 
-with tab2:
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        render_documents()
-    with col2:
-        render_status()
+    with tab2:
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            try:
+                render_documents()
+            except Exception as e:
+                st.error(f"⚠️ Documents Error: {str(e)}")
+        with col2:
+            try:
+                render_status()
+            except Exception as e:
+                st.error(f"⚠️ Status Error: {str(e)}")
+except Exception as e:
+    st.error(f"⚠️ Tabs Error: {str(e)}")
+    st.code(traceback.format_exc())
 
 # ✅ Drawer always rendered last (not in a tab)
-render_drawer()
+try:
+    render_drawer()
+except Exception as e:
+    st.warning(f"⚠️ Drawer Error: {str(e)}")
 
 
 
