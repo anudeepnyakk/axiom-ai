@@ -1,3 +1,15 @@
+---
+title: Axiom AI
+emoji: 🤖
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: latest
+app_file: streamlit_app.py
+pinned: false
+license: mit
+---
+
 # Axiom AI
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
