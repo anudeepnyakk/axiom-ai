@@ -10,8 +10,7 @@ import requests
 import os
 import traceback
 
-# Set page config first
-st.set_page_config(page_title="Axiom Enterprise", layout="wide")
+# Note: Page config is set in streamlit_app.py to ensure it's set first
 
 # Try to import UI components with error handling
 try:
@@ -21,8 +20,13 @@ try:
     from ui.drawer import render_drawer
     from ui.documents import render_documents
     from ui.status import render_status
-except Exception as e:
+except ImportError as e:
     st.error(f"⚠️ Import Error: {str(e)}")
+    st.code(traceback.format_exc())
+    st.info("Check that all UI modules exist in frontend/ui/")
+    st.stop()
+except Exception as e:
+    st.error(f"⚠️ Error loading UI: {str(e)}")
     st.code(traceback.format_exc())
     st.stop()
 
