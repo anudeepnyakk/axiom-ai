@@ -10,7 +10,7 @@ import requests
 import os
 from ui.theme import apply_theme
 from ui.sidebar import render_sidebar
-from ui.chat_hf import render_chat  # Use API-based chat for HuggingFace
+from ui.chat import render_chat  # Use regular chat, but it checks backend_connected
 from ui.drawer import render_drawer
 from ui.documents import render_documents
 from ui.status import render_status
