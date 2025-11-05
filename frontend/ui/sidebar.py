@@ -126,17 +126,17 @@ def render_sidebar():
             st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
         
         if HF_MODE:
-            st.info("📝 Upload documents via backend API endpoint `/api/upload`")
-            uploaded_files = []
-        else:
-            uploaded_files = st.file_uploader(
-                "Documents",
-                accept_multiple_files=True,
-                key="upload_docs",
-                type=['pdf', 'txt'],
-                help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
-                disabled=not can_upload
-            )
+            backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
+            st.info(f"📝 Upload documents to backend: `{backend_url}`")
+        
+        uploaded_files = st.file_uploader(
+            "Documents",
+            accept_multiple_files=True,
+            key="upload_docs",
+            type=['pdf', 'txt'],
+            help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
+            disabled=not can_upload
+        )
         
         # Handle file upload
         if uploaded_files and can_upload:
@@ -158,9 +158,31 @@ def render_sidebar():
                         with open(file_path, 'wb') as f:
                             f.write(uploaded_file.getvalue())
                         
-                        # Import and process (skip if in HuggingFace mode)
+                        # HuggingFace mode: upload via API
                         if HF_MODE:
-                            st.warning("⚠️ Document upload not available in HuggingFace Space. Use backend API directly.")
+                            backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
+                            try:
+                                import requests
+                                with open(file_path, 'rb') as f:
+                                    files = {'file': f}
+                                    response = requests.post(
+                                        f"{backend_url}/api/upload",
+                                        files=files,
+                                        timeout=60
+                                    )
+                                    response.raise_for_status()
+                                    result = response.json()
+                                    if result.get('success'):
+                                        st.success(f"✅ Uploaded {uploaded_file.name}: {result.get('chunks', 0)} chunks indexed")
+                                        mark_file_processed(uploaded_file.name, result.get('chunks', 0))
+                                    else:
+                                        st.error(f"❌ Upload failed: {result.get('error', 'Unknown error')}")
+                            except Exception as e:
+                                st.error(f"❌ Error uploading {uploaded_file.name}: {str(e)}")
+                            finally:
+                                # Clean up temp file
+                                if file_path.exists():
+                                    file_path.unlink()
                             continue
                         
                         from axiom.core.factory import create_document_processor
