@@ -12,6 +12,20 @@ import traceback
 
 # Note: Page config is set in streamlit_app.py to ensure it's set first
 
+# Show header immediately to prevent blank screen
+st.markdown("""
+<div class="header">
+  <div class="header-left">
+    <span class="logo">AXIOM</span>
+    <span class="tagline">Grounded intelligence.</span>
+  </div>
+  <div class="header-right">
+    <span class="health-dot-warning"></span>
+    <span class="health-text">Loading...</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 # Try to import UI components with error handling
 try:
     from ui.theme import apply_theme
@@ -57,7 +71,7 @@ def check_backend_status():
     """Check if backend is reachable"""
     try:
         # Use shorter timeout to prevent hanging
-        response = requests.get(f"{BACKEND_URL}/health", timeout=3)
+        response = requests.get(f"{BACKEND_URL}/health", timeout=2)
         return response.status_code == 200, None
     except requests.exceptions.Timeout:
         return False, "Connection timeout"
@@ -67,6 +81,7 @@ def check_backend_status():
         return False, str(e)
 
 # Initialize backend status (with error handling, non-blocking)
+# Wrap in try-except to prevent crashes
 try:
     backend_connected, backend_error = check_backend_status()
 except Exception as e:
@@ -81,6 +96,7 @@ else:
     status_class = "health-dot-error"
     status_text = "Backend Offline"
 
+# Update header with actual backend status (replace the loading header)
 st.markdown(f"""
 <div class="header">
   <div class="header-left">

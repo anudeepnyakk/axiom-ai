@@ -22,46 +22,48 @@ sys.path.insert(0, str(frontend_dir))
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Always show something - wrap everything in try-except
+# Use a placeholder container that will be replaced
+placeholder = st.empty()
+
 try:
-    # Import frontend-only app
+    # Import frontend-only app (this will replace placeholder content)
     from app_hf import *
+    # If we get here, app loaded successfully - placeholder will be replaced by app_hf content
 except ImportError as e:
-    st.error("⚠️ Import Error - Failed to load Axiom AI application")
-    st.error(f"**Error:** `{str(e)}`")
-    st.code(traceback.format_exc())
-    
-    st.info("""
-    **Troubleshooting:**
-    1. Check that all files are present in the `frontend/` directory
-    2. Check HuggingFace Space logs for detailed errors
-    3. Verify `BACKEND_URL` environment variable is set correctly
-    """)
-    
-    # Show diagnostic info
-    st.text(f"Current directory: {Path(__file__).parent}")
-    st.text(f"Frontend directory: {frontend_dir}")
-    st.text(f"Frontend exists: {frontend_dir.exists()}")
-    
-    if frontend_dir.exists():
-        files = list(frontend_dir.glob('*'))
-        st.text(f"Files in frontend/: {[f.name for f in files]}")
-    
-    st.stop()
+    with placeholder.container():
+        st.error("⚠️ Import Error - Failed to load Axiom AI application")
+        st.error(f"**Error:** `{str(e)}`")
+        st.code(traceback.format_exc())
+        
+        st.info("""
+        **Troubleshooting:**
+        1. Check that all files are present in the `frontend/` directory
+        2. Check HuggingFace Space logs for detailed errors
+        3. Verify `BACKEND_URL` environment variable is set correctly
+        """)
+        
+        # Show diagnostic info
+        st.text(f"Current directory: {Path(__file__).parent}")
+        st.text(f"Frontend directory: {frontend_dir}")
+        st.text(f"Frontend exists: {frontend_dir.exists()}")
+        
+        if frontend_dir.exists():
+            files = list(frontend_dir.glob('*'))
+            st.text(f"Files in frontend/: {[f.name for f in files]}")
 except Exception as e:
-    st.error("⚠️ Failed to load Axiom AI application")
-    st.error(f"**Error:** `{str(e)}`")
-    st.code(traceback.format_exc())
-    
-    st.info("""
-    **Troubleshooting:**
-    1. Check HuggingFace Space logs for detailed errors
-    2. Verify all dependencies are installed
-    3. Check that `BACKEND_URL` environment variable is set correctly
-    """)
-    
-    st.text(f"Current directory: {Path(__file__).parent}")
-    st.text(f"Frontend directory: {frontend_dir}")
-    st.text(f"Frontend exists: {frontend_dir.exists()}")
-    
-    st.stop()
+    with placeholder.container():
+        st.error("⚠️ Failed to load Axiom AI application")
+        st.error(f"**Error:** `{str(e)}`")
+        st.code(traceback.format_exc())
+        
+        st.info("""
+        **Troubleshooting:**
+        1. Check HuggingFace Space logs for detailed errors
+        2. Verify all dependencies are installed
+        3. Check that `BACKEND_URL` environment variable is set correctly
+        """)
+        
+        st.text(f"Current directory: {Path(__file__).parent}")
+        st.text(f"Frontend directory: {frontend_dir}")
+        st.text(f"Frontend exists: {frontend_dir.exists()}")
 
