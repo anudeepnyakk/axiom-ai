@@ -2,9 +2,13 @@ import streamlit as st
 import sys
 from pathlib import Path
 import json
+import os
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Only add parent directory if not in HuggingFace mode (frontend-only)
+# In HF mode, we don't need backend imports
+HF_MODE = os.getenv("BACKEND_URL") is not None and os.getenv("BACKEND_URL") != "http://localhost:8000"
+if not HF_MODE:
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 def render_documents():
     st.subheader("📄 Documents")

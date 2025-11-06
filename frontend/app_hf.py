@@ -52,22 +52,27 @@ def query_backend(question: str, top_k: int = 3):
     except Exception as e:
         return {"error": str(e), "answer": None, "sources": []}
 
-# Check backend connection
+# Check backend connection (non-blocking, with timeout)
 def check_backend_status():
     """Check if backend is reachable"""
     try:
-        response = requests.get(f"{BACKEND_URL}/health", timeout=5)
+        # Use shorter timeout to prevent hanging
+        response = requests.get(f"{BACKEND_URL}/health", timeout=3)
         return response.status_code == 200, None
+    except requests.exceptions.Timeout:
+        return False, "Connection timeout"
+    except requests.exceptions.ConnectionError:
+        return False, "Connection refused"
     except Exception as e:
         return False, str(e)
 
-# Initialize backend status (with error handling)
+# Initialize backend status (with error handling, non-blocking)
 try:
     backend_connected, backend_error = check_backend_status()
 except Exception as e:
     backend_connected = False
     backend_error = str(e)
-    st.warning(f"⚠️ Backend check failed: {backend_error}")
+    # Don't show warning here - will show below if needed
 
 if backend_connected:
     status_class = "health-dot"
