@@ -102,182 +102,197 @@ def remove_document(filename):
         return False
 
 def render_sidebar():
-    with st.sidebar:
-        st.subheader("📁 Ingestion")
-        
-        # Show currently indexed documents
-        processed_files = get_processed_files()
-        if processed_files:
-            st.info(f"📚 {len(processed_files)}/5 documents indexed")
-            with st.expander("View indexed documents"):
-                for filename, info in processed_files.items():
-                    col1, col2 = st.columns([4, 1])
-                    with col1:
-                        st.text(f"✅ {filename} ({info.get('chunk_count', '?')} chunks)")
-                    with col2:
-                        if st.button("🗑️", key=f"del_{filename}", help="Remove this document"):
-                            # Remove document without reloading (avoid duplicate header bug)
-                            success = remove_document(filename)
-                            if success:
-                                # Use st.toast for feedback without full page reload
-                                st.toast(f"✅ Removed {filename}", icon="✅")
-                                # Force cache clear and minimal reload
-                                st.cache_resource.clear()
-                            st.rerun()
-        
-        # Check document limit
-        doc_limit = 5
-        can_upload = len(processed_files) < doc_limit
-        
-        if not can_upload:
-            st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
-        
-        # File uploader (works for both local and HuggingFace mode)
-        uploaded_files = st.file_uploader(
-            "Documents",
-            accept_multiple_files=True,
-            key="upload_docs",
-            type=['pdf', 'txt'],
-            help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
-            disabled=not can_upload
-        )
-        
-        # Handle file upload
-        if uploaded_files and can_upload:
+    try:
+        with st.sidebar:
+            st.subheader("📁 Ingestion")
+            
+            # Show currently indexed documents (with error handling)
             try:
-                for uploaded_file in uploaded_files:
-                    # Check if already processed (persistent check)
-                    if uploaded_file.name in processed_files:
-                        continue  # Skip already processed files
-                    
-                    # Check limit again per file
-                    current_count = len(get_processed_files())
-                    if current_count >= doc_limit:
-                        st.warning(f"⚠️ Cannot add {uploaded_file.name}: limit of {doc_limit} reached")
-                        continue
-                        
-                    with st.spinner(f"Ingesting {uploaded_file.name}..."):
-                        file_path = None
-                        try:
-                            # Save temporarily to upload directory
-                            file_path = UPLOAD_DIR / uploaded_file.name
-                            with open(file_path, 'wb') as f:
-                                f.write(uploaded_file.getvalue())
-                            
-                            # HuggingFace mode: upload via API
-                            if HF_MODE:
-                                backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
-                                try:
-                                    import requests
-                                    import traceback
-                                    
-                                    # Read file bytes for upload
-                                    file_bytes = uploaded_file.getvalue()
-                                    
-                                    # Upload to backend
-                                    files = {'file': (uploaded_file.name, file_bytes, uploaded_file.type or 'application/pdf')}
-                                    response = requests.post(
-                                        f"{backend_url}/api/upload",
-                                        files=files,
-                                        timeout=60
-                                    )
-                                    response.raise_for_status()
-                                    result = response.json()
-                                    
-                                    if result.get('success'):
-                                        chunk_count = result.get('chunks', 0)
-                                        st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
-                                        
-                                        # Mark as processed (with error handling)
-                                        try:
-                                            mark_file_processed(uploaded_file.name, chunk_count)
-                                        except Exception as e:
-                                            st.warning(f"⚠️ Could not save upload record: {str(e)}")
-                                            # Continue anyway - upload was successful
-                                        
-                                        # Visual feedback
-                                        st.balloons()
-                                    else:
-                                        error_msg = result.get('error', 'Unknown error')
-                                        st.error(f"❌ Upload failed: {error_msg}")
-                                        
-                                except requests.exceptions.Timeout:
-                                    st.error(f"❌ Upload timeout: Backend took too long to respond")
-                                except requests.exceptions.ConnectionError:
-                                    st.error(f"❌ Connection error: Cannot reach backend at {backend_url}")
-                                except requests.exceptions.RequestException as e:
-                                    st.error(f"❌ Network error: {str(e)}")
-                                except Exception as e:
-                                    st.error(f"❌ Error uploading {uploaded_file.name}: {str(e)}")
-                                    st.code(traceback.format_exc())
-                                finally:
-                                    # Always clean up temp file
-                                    try:
-                                        if file_path and file_path.exists():
-                                            file_path.unlink()
-                                    except Exception:
-                                        pass  # Ignore cleanup errors
-                                
-                                # Skip local processing
-                                continue
-                            
-                            from axiom.core.factory import create_document_processor
-                            from axiom.config.loader import load_config
-                            
-                            config = load_config()
-                            processor = create_document_processor(config)
-                            chunks = processor.process_document(str(file_path))
-                            
-                            # Mark as processed (persistent)
-                            mark_file_processed(uploaded_file.name, len(chunks) if chunks else 0)
-                            
-                            st.success(f"✅ Ingested {uploaded_file.name}: {len(chunks) if chunks else 0} chunks")
-                            st.rerun()
-                            
-                        except Exception as e:
-                            st.error(f"❌ Error ingesting {uploaded_file.name}: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc())
-                            # Clean up on error
-                            try:
-                                if file_path and file_path.exists():
-                                    file_path.unlink()
-                            except Exception:
-                                pass
+                processed_files = get_processed_files()
             except Exception as e:
-                st.error(f"❌ Unexpected error during upload: {str(e)}")
-                import traceback
-                st.code(traceback.format_exc())
-        
-        # Clear all documents button
-        if processed_files:
-            with st.expander("⚠️ Clear All Documents"):
-                st.warning("This will remove all indexed documents permanently!")
-                if st.button("🗑️ Confirm Clear All", key="confirm_clear"):
-                    try:
-                        # Clear the tracker file
-                        if PROCESSED_FILES_TRACKER.exists():
-                            PROCESSED_FILES_TRACKER.unlink()
-                        # Clear uploaded files
-                        for file in UPLOAD_DIR.glob("*"):
-                            if file.is_file():
-                                file.unlink()
-                        st.success("All documents cleared!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error clearing documents: {e}")
-        
-        st.text_input("Directory Path", "./docs", disabled=True)
+                st.warning(f"⚠️ Could not load processed files: {str(e)}")
+                processed_files = {}
+            
+            if processed_files:
+                st.info(f"📚 {len(processed_files)}/5 documents indexed")
+                with st.expander("View indexed documents"):
+                    for filename, info in processed_files.items():
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            st.text(f"✅ {filename} ({info.get('chunk_count', '?')} chunks)")
+                        with col2:
+                            if st.button("🗑️", key=f"del_{filename}", help="Remove this document"):
+                                # Remove document without reloading (avoid duplicate header bug)
+                                success = remove_document(filename)
+                                if success:
+                                    # Use st.toast for feedback without full page reload
+                                    st.toast(f"✅ Removed {filename}", icon="✅")
+                                    # Force cache clear and minimal reload
+                                    st.cache_resource.clear()
+                                st.rerun()
+            
+            # Check document limit
+            doc_limit = 5
+            can_upload = len(processed_files) < doc_limit
+            
+            if not can_upload:
+                st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
+            
+            # File uploader (works for both local and HuggingFace mode)
+            uploaded_files = st.file_uploader(
+                "Documents",
+                accept_multiple_files=True,
+                key="upload_docs",
+                type=['pdf', 'txt'],
+                help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
+                disabled=not can_upload
+            )
+            
+            # Handle file upload
+            if uploaded_files and can_upload:
+                try:
+                    for uploaded_file in uploaded_files:
+                        # Check if already processed (persistent check)
+                        if uploaded_file.name in processed_files:
+                            continue  # Skip already processed files
+                        
+                        # Check limit again per file
+                        current_count = len(get_processed_files())
+                        if current_count >= doc_limit:
+                            st.warning(f"⚠️ Cannot add {uploaded_file.name}: limit of {doc_limit} reached")
+                            continue
+                            
+                        with st.spinner(f"Ingesting {uploaded_file.name}..."):
+                            file_path = None
+                            try:
+                                # Save temporarily to upload directory
+                                file_path = UPLOAD_DIR / uploaded_file.name
+                                with open(file_path, 'wb') as f:
+                                    f.write(uploaded_file.getvalue())
+                                
+                                # HuggingFace mode: upload via API
+                                if HF_MODE:
+                                    backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
+                                    try:
+                                        import requests
+                                        import traceback
+                                        
+                                        # Read file bytes for upload
+                                        file_bytes = uploaded_file.getvalue()
+                                        
+                                        # Upload to backend
+                                        files = {'file': (uploaded_file.name, file_bytes, uploaded_file.type or 'application/pdf')}
+                                        response = requests.post(
+                                            f"{backend_url}/api/upload",
+                                            files=files,
+                                            timeout=60
+                                        )
+                                        response.raise_for_status()
+                                        result = response.json()
+                                        
+                                        if result.get('success'):
+                                            chunk_count = result.get('chunks', 0)
+                                            st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
+                                            
+                                            # Mark as processed (with error handling)
+                                            try:
+                                                mark_file_processed(uploaded_file.name, chunk_count)
+                                            except Exception as e:
+                                                st.warning(f"⚠️ Could not save upload record: {str(e)}")
+                                                # Continue anyway - upload was successful
+                                            
+                                            # Visual feedback (with error handling to prevent crashes)
+                                            try:
+                                                st.balloons()
+                                            except Exception:
+                                                pass  # Ignore balloons errors - not critical
+                                            
+                                            # Don't rerun - let user see success message
+                                        else:
+                                            error_msg = result.get('error', 'Unknown error')
+                                            st.error(f"❌ Upload failed: {error_msg}")
+                                            
+                                    except requests.exceptions.Timeout:
+                                        st.error(f"❌ Upload timeout: Backend took too long to respond")
+                                    except requests.exceptions.ConnectionError:
+                                        st.error(f"❌ Connection error: Cannot reach backend at {backend_url}")
+                                    except requests.exceptions.RequestException as e:
+                                        st.error(f"❌ Network error: {str(e)}")
+                                    except Exception as e:
+                                        st.error(f"❌ Error uploading {uploaded_file.name}: {str(e)}")
+                                        st.code(traceback.format_exc())
+                                    finally:
+                                        # Always clean up temp file
+                                        try:
+                                            if file_path and file_path.exists():
+                                                file_path.unlink()
+                                        except Exception:
+                                            pass  # Ignore cleanup errors
+                                    
+                                    # Skip local processing
+                                    continue
+                                
+                                from axiom.core.factory import create_document_processor
+                                from axiom.config.loader import load_config
+                                
+                                config = load_config()
+                                processor = create_document_processor(config)
+                                chunks = processor.process_document(str(file_path))
+                                
+                                # Mark as processed (persistent)
+                                mark_file_processed(uploaded_file.name, len(chunks) if chunks else 0)
+                                
+                                st.success(f"✅ Ingested {uploaded_file.name}: {len(chunks) if chunks else 0} chunks")
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.error(f"❌ Error ingesting {uploaded_file.name}: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
+                                # Clean up on error
+                                try:
+                                    if file_path and file_path.exists():
+                                        file_path.unlink()
+                                except Exception:
+                                    pass
+                except Exception as e:
+                    st.error(f"❌ Unexpected error during upload: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
+            
+            # Clear all documents button
+            if processed_files:
+                with st.expander("⚠️ Clear All Documents"):
+                    st.warning("This will remove all indexed documents permanently!")
+                    if st.button("🗑️ Confirm Clear All", key="confirm_clear"):
+                        try:
+                            # Clear the tracker file
+                            if PROCESSED_FILES_TRACKER.exists():
+                                PROCESSED_FILES_TRACKER.unlink()
+                            # Clear uploaded files
+                            for file in UPLOAD_DIR.glob("*"):
+                                if file.is_file():
+                                    file.unlink()
+                            st.success("All documents cleared!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error clearing documents: {e}")
+            
+            st.text_input("Directory Path", "./docs", disabled=True)
 
-        st.subheader("⚙️ Models (UI only)")
-        st.selectbox("Embedding Model", ["MiniLM", "BGE", "Instructor"], disabled=True)
-        st.selectbox("LLM Provider", ["OpenAI", "Anthropic"], disabled=True)
+            st.subheader("⚙️ Models (UI only)")
+            st.selectbox("Embedding Model", ["MiniLM", "BGE", "Instructor"], disabled=True)
+            st.selectbox("LLM Provider", ["OpenAI", "Anthropic"], disabled=True)
 
-        st.subheader("📈 Stats")
-        total_chunks = sum(info.get('chunk_count', 0) for info in processed_files.values())
-        st.metric("Documents", len(processed_files))
-        st.metric("Chunks", total_chunks)
+            st.subheader("📈 Stats")
+            total_chunks = sum(info.get('chunk_count', 0) for info in processed_files.values())
+            st.metric("Documents", len(processed_files))
+            st.metric("Chunks", total_chunks)
 
-        st.subheader("🔧 Developer Tools")
-        if st.button("Open Evidence Drawer"):
-            st.session_state.drawer_open = True
+            st.subheader("🔧 Developer Tools")
+            if st.button("Open Evidence Drawer"):
+                st.session_state.drawer_open = True
+    except Exception as e:
+        st.error(f"⚠️ Sidebar Error: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
