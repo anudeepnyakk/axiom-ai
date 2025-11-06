@@ -12,20 +12,6 @@ import traceback
 
 # Note: Page config is set in streamlit_app.py to ensure it's set first
 
-# Show header immediately to prevent blank screen
-st.markdown("""
-<div class="header">
-  <div class="header-left">
-    <span class="logo">AXIOM</span>
-    <span class="tagline">Grounded intelligence.</span>
-  </div>
-  <div class="header-right">
-    <span class="health-dot-warning"></span>
-    <span class="health-text">Loading...</span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
 # Try to import UI components with error handling
 try:
     from ui.theme import apply_theme
@@ -96,7 +82,7 @@ else:
     status_class = "health-dot-error"
     status_text = "Backend Offline"
 
-# Update header with actual backend status (replace the loading header)
+# Show header with backend status
 st.markdown(f"""
 <div class="header">
   <div class="header-left">
@@ -120,44 +106,57 @@ if not backend_connected:
 st.session_state['backend_url'] = BACKEND_URL
 st.session_state['backend_connected'] = backend_connected
 
-# Render UI components with error handling
+# Wrap entire app rendering in error handling to prevent blank screens
 try:
-    render_sidebar()
-except Exception as e:
-    st.error(f"⚠️ Sidebar Error: {str(e)}")
-    st.code(traceback.format_exc())
+    # Render UI components with error handling
+    try:
+        render_sidebar()
+    except Exception as e:
+        st.error(f"⚠️ Sidebar Error: {str(e)}")
+        st.code(traceback.format_exc())
 
-try:
-    tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
+    try:
+        tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
 
-    with tab1:
-        try:
-            render_chat()
-        except Exception as e:
-            st.error(f"⚠️ Chat Error: {str(e)}")
-            st.code(traceback.format_exc())
-
-    with tab2:
-        col1, col2 = st.columns([2, 1])
-        with col1:
+        with tab1:
             try:
-                render_documents()
+                render_chat()
             except Exception as e:
-                st.error(f"⚠️ Documents Error: {str(e)}")
-        with col2:
-            try:
-                render_status()
-            except Exception as e:
-                st.error(f"⚠️ Status Error: {str(e)}")
-except Exception as e:
-    st.error(f"⚠️ Tabs Error: {str(e)}")
-    st.code(traceback.format_exc())
+                st.error(f"⚠️ Chat Error: {str(e)}")
+                st.code(traceback.format_exc())
 
-# ✅ Drawer always rendered last (not in a tab)
-try:
-    render_drawer()
+        with tab2:
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                try:
+                    render_documents()
+                except Exception as e:
+                    st.error(f"⚠️ Documents Error: {str(e)}")
+            with col2:
+                try:
+                    render_status()
+                except Exception as e:
+                    st.error(f"⚠️ Status Error: {str(e)}")
+    except Exception as e:
+        st.error(f"⚠️ Tabs Error: {str(e)}")
+        st.code(traceback.format_exc())
+
+    # ✅ Drawer always rendered last (not in a tab)
+    try:
+        render_drawer()
+    except Exception as e:
+        st.warning(f"⚠️ Drawer Error: {str(e)}")
+
 except Exception as e:
-    st.warning(f"⚠️ Drawer Error: {str(e)}")
+    # Global error handler - catches any uncaught exceptions
+    st.error("⚠️ **Application Error**")
+    st.error(f"An unexpected error occurred: {str(e)}")
+    st.code(traceback.format_exc())
+    st.info("""
+    **This error was caught to prevent a blank screen.**
+    
+    Please report this error with the traceback above.
+    """)
 
 
 
