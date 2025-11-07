@@ -192,22 +192,24 @@ def render_sidebar():
                                         
                                         if result.get('success'):
                                             chunk_count = result.get('chunks', 0)
-                                            st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
                                             
-                                            # Mark as processed (with error handling)
+                                            # Mark as processed FIRST (before any UI updates)
                                             try:
                                                 mark_file_processed(uploaded_file.name, chunk_count)
                                             except Exception as e:
                                                 st.warning(f"⚠️ Could not save upload record: {str(e)}")
                                                 # Continue anyway - upload was successful
                                             
-                                            # Visual feedback (with error handling to prevent crashes)
+                                            # Show success with toast (less aggressive than balloons)
                                             try:
-                                                st.balloons()
+                                                st.toast(f"✅ {uploaded_file.name}: {chunk_count} chunks indexed", icon="✅")
                                             except Exception:
-                                                pass  # Ignore balloons errors - not critical
+                                                pass
                                             
-                                            # Don't rerun - let user see success message
+                                            st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
+                                            
+                                            # Force immediate rerun to update UI safely
+                                            st.rerun()
                                         else:
                                             error_msg = result.get('error', 'Unknown error')
                                             st.error(f"❌ Upload failed: {error_msg}")

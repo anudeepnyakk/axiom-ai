@@ -109,12 +109,17 @@ st.session_state['backend_connected'] = backend_connected
 # Wrap entire app rendering in error handling to prevent blank screens
 try:
     # Render UI components with error handling
+    # Critical: Wrap sidebar separately to catch upload errors
+    sidebar_error = None
     try:
         render_sidebar()
     except Exception as e:
+        sidebar_error = e
         st.error(f"⚠️ Sidebar Error: {str(e)}")
         st.code(traceback.format_exc())
+        # Continue rendering rest of app even if sidebar fails
 
+    # Only render tabs if sidebar didn't have a fatal error
     try:
         tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
 
@@ -132,20 +137,25 @@ try:
                     render_documents()
                 except Exception as e:
                     st.error(f"⚠️ Documents Error: {str(e)}")
+                    st.code(traceback.format_exc())
             with col2:
                 try:
                     render_status()
                 except Exception as e:
                     st.error(f"⚠️ Status Error: {str(e)}")
+                    st.code(traceback.format_exc())
     except Exception as e:
         st.error(f"⚠️ Tabs Error: {str(e)}")
         st.code(traceback.format_exc())
+        # Show a helpful message
+        st.info("Try refreshing the page (F5)")
 
     # ✅ Drawer always rendered last (not in a tab)
     try:
         render_drawer()
     except Exception as e:
         st.warning(f"⚠️ Drawer Error: {str(e)}")
+        # Don't show traceback for drawer - not critical
 
 except Exception as e:
     # Global error handler - catches any uncaught exceptions
@@ -155,7 +165,9 @@ except Exception as e:
     st.info("""
     **This error was caught to prevent a blank screen.**
     
-    Please report this error with the traceback above.
+    Try refreshing the page (F5).
+    
+    If this persists, check that BACKEND_URL is set correctly in HuggingFace Spaces Settings.
     """)
 
 
