@@ -16,34 +16,47 @@ try:
 except Exception:
     pass  # Already set, ignore
 
-# SHOW IMMEDIATE CONTENT TO DEBUG
-st.write("# DEBUG: Streamlit is running")
-st.write(f"Python path: {sys.path[:3]}")
-
 # Add frontend directory to path so imports work
 frontend_dir = Path(__file__).parent / "frontend"
 sys.path.insert(0, str(frontend_dir))
 sys.path.insert(0, str(Path(__file__).parent))
 
-st.write(f"Frontend dir: {frontend_dir}")
-st.write(f"Frontend exists: {frontend_dir.exists()}")
-
-if frontend_dir.exists():
-    files = list(frontend_dir.glob('*.py'))
-    st.write(f"Python files in frontend/: {[f.name for f in files]}")
-
-# Try importing
-st.write("Attempting import...")
+# Import and EXECUTE the frontend app
+# Using "from app_hf import *" to execute its top-level code
 try:
-    import app_hf
-    st.write("✅ Import successful!")
-    st.write(f"app_hf module: {app_hf}")
-    st.write(f"app_hf file: {app_hf.__file__ if hasattr(app_hf, '__file__') else 'N/A'}")
+    from app_hf import *
 except ImportError as e:
-    st.error(f"❌ Import failed: {e}")
+    st.error("⚠️ Import Error - Failed to load Axiom AI application")
+    st.error(f"**Error:** `{str(e)}`")
     st.code(traceback.format_exc())
+    
+    st.info("""
+    **Troubleshooting:**
+    1. Check that all files are present in the `frontend/` directory
+    2. Check HuggingFace Space logs for detailed errors
+    3. Verify `BACKEND_URL` environment variable is set correctly
+    """)
+    
+    # Show diagnostic info
+    st.text(f"Current directory: {Path(__file__).parent}")
+    st.text(f"Frontend directory: {frontend_dir}")
+    st.text(f"Frontend exists: {frontend_dir.exists()}")
+    
+    if frontend_dir.exists():
+        files = list(frontend_dir.glob('*'))
+        st.text(f"Files in frontend/: {[f.name for f in files]}")
 except Exception as e:
-    st.error(f"❌ Exception during import: {e}")
+    st.error("⚠️ Failed to load Axiom AI application")
+    st.error(f"**Error:** `{str(e)}`")
     st.code(traceback.format_exc())
-
-st.write("End of streamlit_app.py")
+    
+    st.info("""
+    **Troubleshooting:**
+    1. Check HuggingFace Space logs for detailed errors
+    2. Verify all dependencies are installed
+    3. Check that `BACKEND_URL` environment variable is set correctly
+    """)
+    
+    st.text(f"Current directory: {Path(__file__).parent}")
+    st.text(f"Frontend directory: {frontend_dir}")
+    st.text(f"Frontend exists: {frontend_dir.exists()}")
