@@ -125,11 +125,9 @@ def render_sidebar():
                                 # Remove document without reloading (avoid duplicate header bug)
                                 success = remove_document(filename)
                                 if success:
-                                    # Use st.toast for feedback without full page reload
-                                    st.toast(f"✅ Removed {filename}", icon="✅")
-                                    # Force cache clear and minimal reload
+                                    st.success(f"✅ Removed {filename}")
+                                    st.info("↻ Refresh page to update list")
                                     st.cache_resource.clear()
-                                st.rerun()
             
             # Check document limit
             doc_limit = 5
@@ -200,16 +198,12 @@ def render_sidebar():
                                                 st.warning(f"⚠️ Could not save upload record: {str(e)}")
                                                 # Continue anyway - upload was successful
                                             
-                                            # Show success with toast (less aggressive than balloons)
-                                            try:
-                                                st.toast(f"✅ {uploaded_file.name}: {chunk_count} chunks indexed", icon="✅")
-                                            except Exception:
-                                                pass
-                                            
+                                            # Show success message
                                             st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
+                                            st.info("↻ Refresh the page to see updated document list")
                                             
-                                            # Force immediate rerun to update UI safely
-                                            st.rerun()
+                                            # DON'T rerun automatically - it causes crashes
+                                            # User can refresh manually with F5
                                         else:
                                             error_msg = result.get('error', 'Unknown error')
                                             st.error(f"❌ Upload failed: {error_msg}")
@@ -245,7 +239,9 @@ def render_sidebar():
                                 mark_file_processed(uploaded_file.name, len(chunks) if chunks else 0)
                                 
                                 st.success(f"✅ Ingested {uploaded_file.name}: {len(chunks) if chunks else 0} chunks")
-                                st.rerun()
+                                st.info("↻ Refresh the page to see updated document list")
+                                
+                                # DON'T rerun - causes blank screen crashes
                                 
                             except Exception as e:
                                 st.error(f"❌ Error ingesting {uploaded_file.name}: {str(e)}")
@@ -276,7 +272,7 @@ def render_sidebar():
                                 if file.is_file():
                                     file.unlink()
                             st.success("All documents cleared!")
-                            st.rerun()
+                            st.info("↻ Refresh page to update")
                         except Exception as e:
                             st.error(f"Error clearing documents: {e}")
             
