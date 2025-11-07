@@ -9,7 +9,6 @@ import streamlit as st
 import sys
 import traceback
 from pathlib import Path
-import os
 
 # Set page config immediately (must be first)
 try:
@@ -17,27 +16,14 @@ try:
 except Exception:
     pass  # Already set, ignore
 
-# ALWAYS show something immediately - no matter what
-st.write("# Axiom AI")
-st.write("Loading... (if you see this and nothing else, check HuggingFace Logs tab)")
-
-# Show environment info for debugging
-with st.expander("🔍 Debug Info"):
-    st.write(f"Python version: {sys.version}")
-    st.write(f"Current directory: {Path(__file__).parent}")
-    st.write(f"BACKEND_URL: {os.getenv('BACKEND_URL', 'Not set')}")
-
 # Add frontend directory to path so imports work
 frontend_dir = Path(__file__).parent / "frontend"
 sys.path.insert(0, str(frontend_dir))
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Always show something - wrap everything in try-except
+# Import and run the frontend app
 try:
-    # Import frontend-only app
-    st.write("Importing app_hf...")
     from app_hf import *
-    st.write("✅ App loaded successfully")
 except ImportError as e:
     st.error("⚠️ Import Error - Failed to load Axiom AI application")
     st.error(f"**Error:** `{str(e)}`")
@@ -73,4 +59,3 @@ except Exception as e:
     st.text(f"Current directory: {Path(__file__).parent}")
     st.text(f"Frontend directory: {frontend_dir}")
     st.text(f"Frontend exists: {frontend_dir.exists()}")
-
