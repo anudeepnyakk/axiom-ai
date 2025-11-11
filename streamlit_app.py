@@ -16,11 +16,6 @@ try:
 except Exception:
     pass  # Already set, ignore
 
-# Add frontend directory to path so imports work
-frontend_dir = Path(__file__).parent / "frontend"
-sys.path.insert(0, str(frontend_dir))
-sys.path.insert(0, str(Path(__file__).parent))
-
 # Import and EXECUTE the frontend app
 # Using "from app_hf import *" to execute its top-level code
 try:
@@ -32,19 +27,17 @@ except ImportError as e:
     
     st.info("""
     **Troubleshooting:**
-    1. Check that all files are present in the `frontend/` directory
+    1. Check that `app_hf.py` is present in the root directory
     2. Check HuggingFace Space logs for detailed errors
     3. Verify `BACKEND_URL` environment variable is set correctly
     """)
     
     # Show diagnostic info
     st.text(f"Current directory: {Path(__file__).parent}")
-    st.text(f"Frontend directory: {frontend_dir}")
-    st.text(f"Frontend exists: {frontend_dir.exists()}")
-    
-    if frontend_dir.exists():
-        files = list(frontend_dir.glob('*'))
-        st.text(f"Files in frontend/: {[f.name for f in files]}")
+    if Path("app_hf.py").exists():
+        st.text("✅ app_hf.py found")
+    else:
+        st.text("❌ app_hf.py NOT found")
 except Exception as e:
     st.error("⚠️ Failed to load Axiom AI application")
     st.error(f"**Error:** `{str(e)}`")
@@ -58,5 +51,3 @@ except Exception as e:
     """)
     
     st.text(f"Current directory: {Path(__file__).parent}")
-    st.text(f"Frontend directory: {frontend_dir}")
-    st.text(f"Frontend exists: {frontend_dir.exists()}")
