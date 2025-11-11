@@ -55,7 +55,9 @@ def render_chat():
                     if st.button(f"📎 {len(sources)} Sources", key=f"chip_{i}", use_container_width=False):
                         st.session_state.current_sources = sources
                         st.session_state.drawer_open = True
-                        st.rerun()
+                        # Mark that we need to rerun (safer than immediate rerun during upload)
+                        if 'uploading' not in st.session_state or not st.session_state.uploading:
+                            st.rerun()
 
     # input box
     with st.form("chat_input", clear_on_submit=True):
@@ -102,4 +104,6 @@ def render_chat():
         else:
             st.session_state.chat_history.append(("bot", "⚠️ Backend not connected. Please check configuration.", []))
         
-        st.rerun()
+        # Safe rerun - only if not currently uploading
+        if 'uploading' not in st.session_state or not st.session_state.uploading:
+            st.rerun()

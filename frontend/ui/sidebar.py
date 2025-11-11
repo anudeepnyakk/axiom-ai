@@ -136,6 +136,14 @@ def render_sidebar():
             if not can_upload:
                 st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
             
+            # Initialize session state for tracking uploads
+            if 'processed_this_session' not in st.session_state:
+                st.session_state.processed_this_session = set()
+            
+            # Reset uploading flag if not currently uploading
+            if 'uploading' not in st.session_state:
+                st.session_state.uploading = False
+            
             # File uploader (works for both local and HuggingFace mode)
             uploaded_files = st.file_uploader(
                 "Documents",
@@ -148,10 +156,13 @@ def render_sidebar():
             
             # Handle file upload
             if uploaded_files and can_upload:
+                # Set uploading flag to prevent other components from calling st.rerun()
+                st.session_state.uploading = True
                 try:
                     for uploaded_file in uploaded_files:
-                        # Check if already processed (persistent check)
-                        if uploaded_file.name in processed_files:
+                        # Check if already processed (persistent check OR this session)
+                        if (uploaded_file.name in processed_files or 
+                            uploaded_file.name in st.session_state.processed_this_session):
                             continue  # Skip already processed files
                         
                         # Check limit again per file
@@ -194,13 +205,15 @@ def render_sidebar():
                                             # Mark as processed FIRST (before any UI updates)
                                             try:
                                                 mark_file_processed(uploaded_file.name, chunk_count)
+                                                # Also mark in session state to prevent reprocessing on rerun
+                                                st.session_state.processed_this_session.add(uploaded_file.name)
                                             except Exception as e:
                                                 st.warning(f"⚠️ Could not save upload record: {str(e)}")
                                                 # Continue anyway - upload was successful
                                             
                                             # Show success message
                                             st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
-                                            st.info("↻ Refresh the page to see updated document list")
+                                            st.info("↻ Refresh the page (F5) to see updated document list")
                                             
                                             # DON'T rerun automatically - it causes crashes
                                             # User can refresh manually with F5
@@ -257,6 +270,9 @@ def render_sidebar():
                     st.error(f"❌ Unexpected error during upload: {str(e)}")
                     import traceback
                     st.code(traceback.format_exc())
+                finally:
+                    # Clear uploading flag after upload completes (success or error)
+                    st.session_state.uploading = False
             
             # Clear all documents button
             if processed_files:
