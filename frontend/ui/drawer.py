@@ -41,9 +41,13 @@ def render_drawer():
             # Close button
             if st.button("✕ Close Sources", key="close_sources", use_container_width=True):
                 st.session_state.drawer_open = False
-                st.rerun()
+                # Safe rerun - only if not uploading
+                if 'uploading' not in st.session_state or not st.session_state.uploading:
+                    st.rerun()
         else:
             st.info("No sources available. Ask a question to see retrieved documents.")
             if st.button("Close", key="close_empty"):
                 st.session_state.drawer_open = False
-                st.rerun()
+                # Safe rerun - only if not uploading
+                if 'uploading' not in st.session_state or not st.session_state.uploading:
+                    st.rerun()
