@@ -14,12 +14,26 @@ if not HF_MODE:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Persistent storage for uploaded documents
-# Use absolute path relative to frontend directory
-FRONTEND_DIR = Path(__file__).parent.parent
-UPLOAD_DIR = FRONTEND_DIR / "uploaded_documents"
-UPLOAD_DIR.mkdir(exist_ok=True)
+# HuggingFace Spaces has a read-only filesystem - use /tmp when in HF mode
+if HF_MODE:
+    FRONTEND_DIR = Path(tempfile.gettempdir())
+    UPLOAD_DIR = FRONTEND_DIR / "axiom_uploads"
+    PROCESSED_FILES_TRACKER = FRONTEND_DIR / "axiom_processed_files.json"
+else:
+    FRONTEND_DIR = Path(__file__).parent.parent
+    UPLOAD_DIR = FRONTEND_DIR / "uploaded_documents"
+    PROCESSED_FILES_TRACKER = FRONTEND_DIR / "processed_files.json"
 
-PROCESSED_FILES_TRACKER = FRONTEND_DIR / "processed_files.json"
+# Make sure the upload directory exists (ignore errors in read-only environments)
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except PermissionError:
+    if HF_MODE:
+        # Fallback to a guaranteed-writable temp directory
+        UPLOAD_DIR = Path(tempfile.mkdtemp(prefix="axiom_uploads_"))
+        PROCESSED_FILES_TRACKER = Path(tempfile.gettempdir()) / "axiom_processed_files.json"
+    else:
+        raise
 
 def get_processed_files():
     """Load list of processed files from disk"""
