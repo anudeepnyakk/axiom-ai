@@ -12,23 +12,13 @@ import traceback
 
 # Note: Page config is set in streamlit_app.py to ensure it's set first
 
-# Try to import UI components with error handling
-try:
-    from frontend.ui.theme import apply_theme
-    from frontend.ui.sidebar import render_sidebar
-    from frontend.ui.chat import render_chat
-    from frontend.ui.drawer import render_drawer
-    from frontend.ui.documents import render_documents
-    from frontend.ui.status import render_status
-except ImportError as e:
-    st.error(f"⚠️ Import Error: {str(e)}")
-    st.code(traceback.format_exc())
-    st.info("Check that all UI modules exist in frontend/ui/")
-    st.stop()
-except Exception as e:
-    st.error(f"⚠️ Error loading UI: {str(e)}")
-    st.code(traceback.format_exc())
-    st.stop()
+# Import UI components (let errors propagate to streamlit_app.py)
+from frontend.ui.theme import apply_theme
+from frontend.ui.sidebar import render_sidebar
+from frontend.ui.chat import render_chat
+from frontend.ui.drawer import render_drawer
+from frontend.ui.documents import render_documents
+from frontend.ui.status import render_status
 
 try:
     apply_theme()
