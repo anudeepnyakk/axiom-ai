@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 
 # Note: Quote packages with < to prevent shell redirection
 RUN pip install --no-cache-dir \
     "flask>=2.3.0" \
+    "flask-cors>=4.0.0" \
     "prometheus-client>=0.18.0" \
     "requests>=2.31.0" \
     "openai<2.0.0" \
