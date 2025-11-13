@@ -19,6 +19,7 @@ import logging
 import os
 from pathlib import Path
 from flask import Flask, Response, request, jsonify
+from flask_cors import CORS
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from axiom.metrics import REQUEST_COUNT, ERROR_COUNT, LATENCY_SECONDS
 
@@ -31,6 +32,9 @@ logger = logging.getLogger(__name__)
 
 # Create Flask app
 app = Flask(__name__)
+
+# Enable CORS for all routes (allows HuggingFace Space to call this backend)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 @app.route('/metrics')
