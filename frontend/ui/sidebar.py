@@ -36,257 +36,88 @@ except PermissionError:
         raise
 
 def get_processed_files():
-    """Load list of processed files from disk"""
-    if PROCESSED_FILES_TRACKER.exists():
+    """Get list of processed files from backend API"""
+    if HF_MODE:
         try:
-            with open(PROCESSED_FILES_TRACKER, 'r') as f:
-                return json.load(f)
+            import requests
+            backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL'))
+            if not backend_url:
+                return {}
+            response = requests.get(f"{backend_url}/api/documents", timeout=5)
+            if response.status_code == 200:
+                return response.json().get('documents', {})
         except:
-            return {}
-    return {}
-
-def mark_file_processed(filename, chunk_count):
-    """Persistently mark a file as processed"""
-    try:
-        processed = get_processed_files()
-        # Use current time instead of file mtime (file may be deleted)
-        import time
-        processed[filename] = {
-            "chunk_count": chunk_count,
-            "timestamp": str(time.time())
-        }
-        with open(PROCESSED_FILES_TRACKER, 'w') as f:
-            json.dump(processed, f, indent=2)
-    except Exception as e:
-        # Don't raise - just log silently
-        # The upload was successful, tracking is secondary
-        pass
-
-def get_file_hash(file_bytes):
-    """Get hash of file content to detect duplicates"""
-    return hashlib.md5(file_bytes).hexdigest()
-
-def remove_document(filename):
-    """Remove a document from tracking and storage"""
-    try:
-        # Remove from tracking file
-        processed = get_processed_files()
-        if filename in processed:
-            del processed[filename]
-            with open(PROCESSED_FILES_TRACKER, 'w') as f:
-                json.dump(processed, f, indent=2)
-        
-        # Remove physical file
-        file_path = UPLOAD_DIR / filename
-        if file_path.exists():
-            file_path.unlink()
-        
-        # IMPORTANT: Clear ChromaDB collection to remove embeddings
-        # This prevents citation glitches with wrong/old documents
-        # Simplified for speed - just mark as removed, embeddings cleaned on next query
-        try:
-            # Try quick cleanup but don't block on it
-            from axiom.config.loader import load_config
-            from axiom.core.factory import create_query_engine
-            
-            config = load_config()
-            
-            # Quick check if we can access vector store
-            if hasattr(config, 'vector_store'):
-                query_engine = create_query_engine(config)
-                collection = query_engine.vector_store._collection
-                
-                # Quick delete without full scan (faster!)
-                # Get IDs with WHERE filter
-                try:
-                    results = collection.get(where={"source_file_path": {"$contains": filename}})
-                    if results and 'ids' in results and results['ids']:
-                        collection.delete(ids=results['ids'])
-                except:
-                    # If filter fails, skip vector cleanup (file is already removed)
-                    pass
-        except Exception:
-            # Silently fail - document is removed from tracking, that's good enough
             pass
-        
-        return True
-    except Exception as e:
-        import streamlit as st
-        st.error(f"Error removing document: {e}")
-        return False
+        return {}
+    else:
+        # Local mode - not used on HuggingFace
+        return {}
 
 def render_sidebar():
     try:
         with st.sidebar:
             st.subheader("📁 Ingestion")
             
-            # Show currently indexed documents (with error handling)
-            try:
-                processed_files = get_processed_files()
-            except Exception as e:
-                st.warning(f"⚠️ Could not load processed files: {str(e)}")
-                processed_files = {}
+            # Initialize session state
+            if 'processed_this_session' not in st.session_state:
+                st.session_state.processed_this_session = set()
+            
+            # Get documents from backend
+            processed_files = get_processed_files()
             
             if processed_files:
                 st.info(f"📚 {len(processed_files)}/5 documents indexed")
                 with st.expander("View indexed documents"):
                     for filename, info in processed_files.items():
-                        col1, col2 = st.columns([4, 1])
-                        with col1:
-                            st.text(f"✅ {filename} ({info.get('chunk_count', '?')} chunks)")
-                        with col2:
-                            if st.button("🗑️", key=f"del_{filename}", help="Remove this document"):
-                                # Remove document without reloading (avoid duplicate header bug)
-                                success = remove_document(filename)
-                                if success:
-                                    st.success(f"✅ Removed {filename}")
-                                    st.info("↻ Refresh page to update list")
-                                    st.cache_resource.clear()
+                        st.text(f"✅ {filename} ({info.get('chunk_count', '?')} chunks)")
             
             # Check document limit
             doc_limit = 5
             can_upload = len(processed_files) < doc_limit
             
             if not can_upload:
-                st.warning(f"⚠️ Document limit reached ({doc_limit} max). Remove documents to add new ones.")
+                st.warning(f"⚠️ Document limit reached ({doc_limit} max).")
             
-            # Initialize session state for tracking uploads
-            if 'processed_this_session' not in st.session_state:
-                st.session_state.processed_this_session = set()
-            
-            # Reset uploading flag if not currently uploading
-            if 'uploading' not in st.session_state:
-                st.session_state.uploading = False
-            
-            # File uploader (works for both local and HuggingFace mode)
-            uploaded_files = st.file_uploader(
-                "Documents",
-                accept_multiple_files=True,
-                key="upload_docs",
+            # File uploader
+            uploaded_file = st.file_uploader(
+                "Upload Document",
                 type=['pdf', 'txt'],
                 help=f"Upload PDF or TXT files. Max {doc_limit} documents.",
                 disabled=not can_upload
             )
             
-            # Handle file upload
-            if uploaded_files and can_upload:
-                # Set uploading flag to prevent other components from calling st.rerun()
-                st.session_state.uploading = True
-                try:
-                    for uploaded_file in uploaded_files:
-                        # Check if already processed (persistent check OR this session)
-                        if (uploaded_file.name in processed_files or 
-                            uploaded_file.name in st.session_state.processed_this_session):
-                            continue  # Skip already processed files
-                        
-                        # Check limit again per file
-                        current_count = len(get_processed_files())
-                        if current_count >= doc_limit:
-                            st.warning(f"⚠️ Cannot add {uploaded_file.name}: limit of {doc_limit} reached")
-                            continue
-                            
-                        with st.spinner(f"Ingesting {uploaded_file.name}..."):
-                            file_path = None
-                            try:
-                                # Save temporarily to upload directory
-                                file_path = UPLOAD_DIR / uploaded_file.name
-                                with open(file_path, 'wb') as f:
-                                    f.write(uploaded_file.getvalue())
+            # Handle file upload - SIMPLIFIED
+            if uploaded_file and can_upload:
+                # Check if already processed this session
+                if uploaded_file.name in st.session_state.processed_this_session:
+                    st.info(f"✓ {uploaded_file.name} already uploaded")
+                else:
+                    with st.spinner(f"Uploading {uploaded_file.name}..."):
+                        try:
+                            if HF_MODE:
+                                # HF mode: send directly to backend, NO local files
+                                import requests
+                                backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL'))
                                 
-                                # HuggingFace mode: upload via API
-                                if HF_MODE:
-                                    backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL', 'http://localhost:8000'))
-                                    try:
-                                        import requests
-                                        import traceback
-                                        
-                                        # Read file bytes for upload
-                                        file_bytes = uploaded_file.getvalue()
-                                        
-                                        # Upload to backend
-                                        files = {'file': (uploaded_file.name, file_bytes, uploaded_file.type or 'application/pdf')}
-                                        response = requests.post(
-                                            f"{backend_url}/api/upload",
-                                            files=files,
-                                            timeout=60
-                                        )
-                                        response.raise_for_status()
-                                        result = response.json()
-                                        
-                                        if result.get('success'):
-                                            chunk_count = result.get('chunks', 0)
-                                            
-                                            # Mark as processed FIRST (before any UI updates)
-                                            try:
-                                                mark_file_processed(uploaded_file.name, chunk_count)
-                                                # Also mark in session state to prevent reprocessing on rerun
-                                                st.session_state.processed_this_session.add(uploaded_file.name)
-                                            except Exception as e:
-                                                st.warning(f"⚠️ Could not save upload record: {str(e)}")
-                                                # Continue anyway - upload was successful
-                                            
-                                            # Show success message
-                                            st.success(f"✅ Uploaded {uploaded_file.name}: {chunk_count} chunks indexed")
-                                            st.info("↻ Refresh the page (F5) to see updated document list")
-                                            
-                                            # DON'T rerun automatically - it causes crashes
-                                            # User can refresh manually with F5
-                                        else:
-                                            error_msg = result.get('error', 'Unknown error')
-                                            st.error(f"❌ Upload failed: {error_msg}")
-                                            
-                                    except requests.exceptions.Timeout:
-                                        st.error(f"❌ Upload timeout: Backend took too long to respond")
-                                    except requests.exceptions.ConnectionError:
-                                        st.error(f"❌ Connection error: Cannot reach backend at {backend_url}")
-                                    except requests.exceptions.RequestException as e:
-                                        st.error(f"❌ Network error: {str(e)}")
-                                    except Exception as e:
-                                        st.error(f"❌ Error uploading {uploaded_file.name}: {str(e)}")
-                                        st.code(traceback.format_exc())
-                                    finally:
-                                        # Always clean up temp file
-                                        try:
-                                            if file_path and file_path.exists():
-                                                file_path.unlink()
-                                        except Exception:
-                                            pass  # Ignore cleanup errors
+                                if not backend_url:
+                                    st.error("❌ Backend URL not set")
+                                else:
+                                    files = {'file': (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type or 'application/pdf')}
+                                    response = requests.post(f"{backend_url}/api/upload", files=files, timeout=60)
+                                    response.raise_for_status()
+                                    result = response.json()
                                     
-                                    # Skip local processing
-                                    continue
-                                
-                                from axiom.core.factory import create_document_processor
-                                from axiom.config.loader import load_config
-                                
-                                config = load_config()
-                                processor = create_document_processor(config)
-                                chunks = processor.process_document(str(file_path))
-                                
-                                # Mark as processed (persistent)
-                                mark_file_processed(uploaded_file.name, len(chunks) if chunks else 0)
-                                
-                                st.success(f"✅ Ingested {uploaded_file.name}: {len(chunks) if chunks else 0} chunks")
-                                st.info("↻ Refresh the page to see updated document list")
-                                
-                                # DON'T rerun - causes blank screen crashes
-                                
-                            except Exception as e:
-                                st.error(f"❌ Error ingesting {uploaded_file.name}: {str(e)}")
-                                import traceback
-                                st.code(traceback.format_exc())
-                                # Clean up on error
-                                try:
-                                    if file_path and file_path.exists():
-                                        file_path.unlink()
-                                except Exception:
-                                    pass
-                except Exception as e:
-                    st.error(f"❌ Unexpected error during upload: {str(e)}")
-                    import traceback
-                    st.code(traceback.format_exc())
-                finally:
-                    # Clear uploading flag after upload completes (success or error)
-                    st.session_state.uploading = False
+                                    if result.get('success'):
+                                        st.session_state.processed_this_session.add(uploaded_file.name)
+                                        st.success(f"✅ {uploaded_file.name} uploaded ({result.get('chunks', 0)} chunks)")
+                                        st.info("↻ Refresh (F5) to see in list")
+                                    else:
+                                        st.error(f"❌ {result.get('error', 'Upload failed')}")
+                            else:
+                                # Local mode (not used on HF)
+                                st.warning("Local mode not implemented")
+                        except Exception as e:
+                            st.error(f"❌ Upload failed: {str(e)}")
             
             # Clear all documents button
             if processed_files:
