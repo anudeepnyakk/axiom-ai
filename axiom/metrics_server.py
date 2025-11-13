@@ -111,6 +111,37 @@ def query():
         return jsonify({"error": str(e), "answer": None, "sources": []}), 500
 
 
+@app.route('/api/documents', methods=['GET'])
+def get_documents():
+    """Get list of processed documents"""
+    try:
+        from axiom.config.loader import load_config
+        from axiom.core.factory import create_query_engine
+        
+        config = load_config()
+        query_engine = create_query_engine(config)
+        collection = query_engine.vector_store._collection
+        
+        # Get all documents
+        results = collection.get()
+        
+        # Extract unique filenames and count chunks
+        doc_map = {}
+        if results and 'metadatas' in results:
+            for metadata in results['metadatas']:
+                if metadata and 'source_file_path' in metadata:
+                    filename = Path(metadata['source_file_path']).name
+                    if filename not in doc_map:
+                        doc_map[filename] = {'chunk_count': 0}
+                    doc_map[filename]['chunk_count'] += 1
+        
+        return jsonify({"documents": doc_map})
+        
+    except Exception as e:
+        logger.error(f"Documents list error: {e}", exc_info=True)
+        return jsonify({"documents": {}}), 200
+
+
 @app.route('/api/upload', methods=['POST'])
 def upload():
     """Upload and process document endpoint"""
