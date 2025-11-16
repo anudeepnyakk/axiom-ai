@@ -120,7 +120,11 @@ def get_documents():
         
         config = load_config()
         query_engine = create_query_engine(config)
-        collection = query_engine.vector_store._collection
+        
+        # Use the public method to ensure the collection is initialized
+        collection = query_engine.vector_store.get_or_create_collection(
+            query_engine.vector_store.default_collection_name
+        )
         
         # Get all documents
         results = collection.get()
