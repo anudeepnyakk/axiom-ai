@@ -1,14 +1,28 @@
 """
 Axiom AI - Streamlit App Entry Point for HuggingFace Spaces
-
-HuggingFace Spaces expects streamlit_app.py when using Streamlit template.
-This file imports our frontend-only app_hf.py which calls the backend API.
 """
+import sys
+import os
+
+# Print diagnostic info to container logs BEFORE Streamlit starts
+print("=" * 60)
+print("[streamlit_app.py] Starting Axiom AI frontend...")
+print(f"[streamlit_app.py] Current directory: {os.getcwd()}")
+print(f"[streamlit_app.py] Python path: {sys.path[:3]}")
+print(f"[streamlit_app.py] BACKEND_URL: {os.getenv('BACKEND_URL', 'NOT SET')}")
+
+# Check if key files exist
+import pathlib
+cwd = pathlib.Path.cwd()
+print(f"[streamlit_app.py] app_hf.py exists: {(cwd / 'app_hf.py').exists()}")
+print(f"[streamlit_app.py] frontend/ exists: {(cwd / 'frontend').exists()}")
+if (cwd / 'frontend').exists():
+    print(f"[streamlit_app.py] frontend/ui/ exists: {(cwd / 'frontend' / 'ui').exists()}")
+print("=" * 60)
+sys.stdout.flush()
 
 import streamlit as st
-import sys
 import traceback
-from pathlib import Path
 
 # Set page config immediately (must be first)
 try:
@@ -17,10 +31,20 @@ except Exception:
     pass  # Already set, ignore
 
 # Import and EXECUTE the frontend app
-# Using "from app_hf import *" to execute its top-level code
 try:
+    print("[streamlit_app.py] Attempting to import app_hf...")
+    sys.stdout.flush()
+    
     from app_hf import *
+    
+    print("[streamlit_app.py] app_hf imported successfully!")
+    sys.stdout.flush()
+    
 except ImportError as e:
+    print(f"[streamlit_app.py] ImportError: {e}")
+    print(traceback.format_exc())
+    sys.stdout.flush()
+    
     st.error("⚠️ Import Error - Failed to load Axiom AI application")
     st.error(f"**Error:** `{str(e)}`")
     st.code(traceback.format_exc())
@@ -33,12 +57,17 @@ except ImportError as e:
     """)
     
     # Show diagnostic info
-    st.text(f"Current directory: {Path(__file__).parent}")
-    if Path("app_hf.py").exists():
+    st.text(f"Current directory: {pathlib.Path(__file__).parent}")
+    if pathlib.Path("app_hf.py").exists():
         st.text("✅ app_hf.py found")
     else:
         st.text("❌ app_hf.py NOT found")
+        
 except Exception as e:
+    print(f"[streamlit_app.py] Unexpected error: {e}")
+    print(traceback.format_exc())
+    sys.stdout.flush()
+    
     st.error("⚠️ Failed to load Axiom AI application")
     st.error(f"**Error:** `{str(e)}`")
     st.code(traceback.format_exc())
@@ -50,4 +79,7 @@ except Exception as e:
     3. Check that `BACKEND_URL` environment variable is set correctly
     """)
     
-    st.text(f"Current directory: {Path(__file__).parent}")
+    st.text(f"Current directory: {pathlib.Path(__file__).parent}")
+
+print("[streamlit_app.py] End of script")
+sys.stdout.flush()
