@@ -30,12 +30,12 @@ try:
 except Exception:
     pass  # Already set, ignore
 
-# Import and EXECUTE the frontend app
+# Import app_hf module (don't use *)
 try:
-    print("[streamlit_app.py] Attempting to import app_hf...")
+    print("[streamlit_app.py] Importing app_hf...")
     sys.stdout.flush()
     
-    from app_hf import *
+    import app_hf
     
     print("[streamlit_app.py] app_hf imported successfully!")
     sys.stdout.flush()
@@ -61,7 +61,7 @@ except ImportError as e:
     if pathlib.Path("app_hf.py").exists():
         st.text("✅ app_hf.py found")
     else:
-        st.text("❌ app_hf.py NOT found")
+        st.text("❌ app_hf.py NOT found") 
         
 except Exception as e:
     print(f"[streamlit_app.py] Unexpected error: {e}")
