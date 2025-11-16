@@ -1,4 +1,9 @@
 ﻿#!/usr/bin/env bash
+echo "[DBG] start.sh invoked. pwd: $(pwd) user: $(whoami) ls:" 
+ls -la
+echo "[DBG] Environment variables:"
+env | sort
+echo "[DBG] --------------------------"
 set -euo pipefail
 
 echo "[start.sh] Starting backend on port 5000..."

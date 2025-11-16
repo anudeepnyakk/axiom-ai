@@ -117,6 +117,11 @@ def render_sidebar():
                                 # Local mode (not used on HF)
                                 st.warning("Local mode not implemented")
                         except Exception as e:
+                            import traceback, sys
+                            print("[DBG] UPLOAD HANDLER EXCEPTION", file=sys.stderr)
+                            traceback.print_exc()
+                            sys.stderr.flush()
+                            sys.stdout.flush()
                             st.error(f"❌ Upload failed: {str(e)}")
             
             # Clear all documents button

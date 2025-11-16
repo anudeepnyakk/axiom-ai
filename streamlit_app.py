@@ -81,5 +81,10 @@ except Exception as e:
     
     st.text(f"Current directory: {pathlib.Path(__file__).parent}")
 
+# --- MAIN APP EXECUTION ---
+# This ensures the UI is re-rendered on every Streamlit rerun
+if 'app_hf' in sys.modules:
+    app_hf.main()
+
 print("[streamlit_app.py] End of script")
 sys.stdout.flush()
