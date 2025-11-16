@@ -73,6 +73,10 @@ else:
     status_text = "Backend Offline"
 
 # Show header with backend status
+print("[app_hf.py] Rendering header...")
+import sys
+sys.stdout.flush()
+
 st.markdown(f"""
 <div class="header">
   <div class="header-left">
@@ -86,6 +90,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+print("[app_hf.py] Header rendered.")
+sys.stdout.flush()
+
 # Show backend status
 if not backend_connected:
     st.warning(f"⚠️ Backend not connected. Set BACKEND_URL environment variable.")
@@ -97,12 +104,19 @@ st.session_state['backend_url'] = BACKEND_URL
 st.session_state['backend_connected'] = backend_connected
 
 # Wrap entire app rendering in error handling to prevent blank screens
+print("[app_hf.py] Starting UI component rendering...")
+sys.stdout.flush()
+
 try:
     # Render UI components with error handling
     # Critical: Wrap sidebar separately to catch upload errors
     sidebar_error = None
     try:
+        print("[app_hf.py] Rendering sidebar...")
+        sys.stdout.flush()
         render_sidebar()
+        print("[app_hf.py] Sidebar rendered.")
+        sys.stdout.flush()
     except Exception as e:
         sidebar_error = e
         st.error(f"⚠️ Sidebar Error: {str(e)}")
