@@ -37,6 +37,21 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
+def get_query_engine():
+    """
+    Lazily initialize and reuse the query engine so heavyweight components
+    (SentenceTransformer, Chroma clients, etc.) only load once per process.
+    """
+    if not hasattr(app, 'query_engine'):
+        from axiom.config.loader import load_config
+        from axiom.core.factory import create_query_engine
+
+        config = load_config()
+        app.query_engine = create_query_engine(config)
+
+    return app.query_engine
+
+
 @app.route('/metrics')
 def metrics():
     """
@@ -79,9 +94,6 @@ def health():
 def query():
     """RAG query endpoint"""
     try:
-        from axiom.config.loader import load_config
-        from axiom.core.factory import create_query_engine
-        
         data = request.get_json()
         if not data or 'question' not in data:
             return jsonify({"error": "Missing 'question' in request body"}), 400
@@ -89,11 +101,8 @@ def query():
         question = data['question']
         top_k = data.get('top_k', 3)
         
-        if not hasattr(app, 'query_engine'):
-            config = load_config()
-            app.query_engine = create_query_engine(config)
-        
-        result = app.query_engine.query(question, top_k=top_k)
+        query_engine = get_query_engine()
+        result = query_engine.query(question, top_k=top_k)
         
         return jsonify({
             "answer": result.answer,
@@ -115,11 +124,7 @@ def query():
 def get_documents():
     """Get list of processed documents"""
     try:
-        from axiom.config.loader import load_config
-        from axiom.core.factory import create_query_engine
-        
-        config = load_config()
-        query_engine = create_query_engine(config)
+        query_engine = get_query_engine()
         
         # Use the public method to ensure the collection is initialized
         collection = query_engine.vector_store.get_or_create_collection(
