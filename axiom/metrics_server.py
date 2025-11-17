@@ -36,6 +36,9 @@ app = Flask(__name__)
 # Enable CORS for all routes (allows HuggingFace Space to call this backend)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Increase max upload size to 200MB
+app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200 MB
+
 
 def get_query_engine():
     """
