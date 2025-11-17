@@ -103,7 +103,7 @@ def render_sidebar():
                                     st.error("❌ Backend URL not set")
                                 else:
                                     files = {'file': (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type or 'application/pdf')}
-                                    response = requests.post(f"{backend_url}/api/upload", files=files, timeout=60)
+                                    response = requests.post(f"{backend_url}/api/upload", files=files, timeout=180)
                                     response.raise_for_status()
                                     result = response.json()
                                     
