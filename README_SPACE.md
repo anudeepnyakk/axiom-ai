@@ -1,59 +1,76 @@
----
-title: Axiom AI
-emoji: 🤖
-colorFrom: blue
-colorTo: purple
-sdk: streamlit
-sdk_version: 1.28.0
-app_file: app.py
-pinned: false
-license: mit
----
+# Axiom AI - Enterprise RAG System
 
-# Axiom AI - Production RAG System
+**Live Demo** | [GitHub](https://github.com/anudeepnyakk/axiom-ai)
 
-**High-fidelity RAG system with multilingual support, robust security, and observability.**
+## 🎯 What is Axiom AI?
 
-## 🚀 Live Demo
+Axiom AI is a production-grade Retrieval-Augmented Generation (RAG) system that allows users to upload documents, index them with semantic search, and query them using natural language with cited sources.
 
-Click "Embed this Space" or visit the live app to see Axiom AI in action!
+### Key Features
+- 📄 **Document Ingestion**: Upload PDFs and TXT files
+- 🔍 **Semantic Search**: Vector-based retrieval using sentence-transformers
+- 💬 **Conversational Q&A**: GPT-4 powered answers with source citations
+- 📊 **System Monitoring**: Real-time metrics and health checks
+- 🎨 **Modern UI**: Clean, responsive Streamlit interface
 
-## ✨ Features
+## 🏗️ Architecture
 
-- **Multilingual Support**: Query in English, Hindi, and more
-- **Retrieval Evaluation**: Metrics-driven approach with Recall@k, MRR tracking
-- **Secure by Default**: PII redaction, constant-time API key comparison
-- **Production Ready**: Fault tolerance, retry logic, graceful degradation
+This Space is the **frontend only**. The backend API runs separately on Railway for:
+- Persistent document storage (ChromaDB)
+- Heavy model inference (sentence-transformers)
+- Scalable compute resources
 
-## 📊 Performance Metrics
+```
+┌─────────────────┐      HTTPS/API      ┌──────────────────┐
+│  HuggingFace    │ ─────────────────► │  Railway Backend │
+│  (Streamlit UI) │                     │  (Flask + Chroma)│
+└─────────────────┘                     └──────────────────┘
+```
 
-| Metric | English | Hindi |
-|--------|---------|-------|
-| Recall@5 | 0.97 | 0.93 |
-| MRR | 0.92 | 0.87 |
-| Latency | 145ms | 155ms |
+## 🚀 Tech Stack
 
-## 🔧 Configuration
+**Frontend (This Space)**
+- Streamlit 1.28+
+- Requests (API client)
+- Pure stateless UI
 
-The app uses environment variables for configuration:
+**Backend (Railway)**
+- Flask 2.3+ with CORS
+- ChromaDB 0.4.x (vector store)
+- Sentence-Transformers 2.7.0 (embeddings)
+- OpenAI GPT-4 (synthesis)
+- Prometheus metrics
 
-- `OPENAI_API_KEY` (required): Your OpenAI API key for LLM synthesis
-- `EMBEDDING_PROVIDER` (optional): Set to `local` for offline operation (default: uses OpenAI)
-- `EMBEDDING_MODEL` (optional): Embedding model name
+## 🔧 Environment Variables
 
-## 📚 How It Works
+Set in Space Settings → Variables:
 
-1. **Ingestion**: Documents are processed and embedded using multilingual models
-2. **Storage**: Embeddings stored in ChromaDB vector store
-3. **Query**: User questions are embedded and matched against the knowledge base
-4. **Synthesis**: GPT-4o generates answers with source citations
+```bash
+BACKEND_URL=https://your-railway-backend.railway.app
+```
 
-## 🔗 Learn More
+## 📖 Usage
 
-- **GitHub**: [View Source Code](https://github.com/YOUR_USERNAME/axiom)
-- **Documentation**: See `/docs` folder for architecture, evaluation, and security docs
+1. **Upload Documents**: Use the sidebar to upload PDF or TXT files (max 5 documents)
+2. **Ask Questions**: Type natural language questions in the chat interface
+3. **View Sources**: Click "Show Evidence" to see the retrieved document chunks
+4. **Monitor System**: Check the SystemOps tab for backend health and metrics
+
+## 🎓 Built For
+
+This project demonstrates:
+- Full-stack RAG system design
+- Production deployment patterns (separate frontend/backend)
+- Docker containerization
+- API design and error handling
+- Observability and monitoring
+- Modern Python best practices
 
 ## 📝 License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](https://github.com/anudeepnyakk/axiom-ai/blob/main/LICENSE)
 
+---
+
+**Author**: Anudeep  
+**Contact**: [GitHub](https://github.com/anudeepnyakk)
