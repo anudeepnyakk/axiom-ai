@@ -118,8 +118,9 @@ def main():
         st.error(f"⚠️ Error: {str(e)}")
         st.code(traceback.format_exc())
 
-# Run main function
-main()
+# Only run main if this file is executed directly (not imported)
+if __name__ == "__main__":
+    main()
 
 
 
