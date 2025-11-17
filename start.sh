@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 echo "[DBG] start.sh invoked. pwd: $(pwd) user: $(whoami) ls:" 
 ls -la
 echo "[DBG] Environment variables:"
