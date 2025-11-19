@@ -100,7 +100,7 @@ def main():
 
     # Render UI with centered layout wrapper
     try:
-        render_sidebar()
+        processed_files, active_file = render_sidebar()
         
         # Page Layout Rewrite - Centered container like Streamlit assistant
         with st.container():
@@ -112,13 +112,13 @@ def main():
             
             with tab1:
                 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-                render_chat()
+                render_chat(active_file=active_file)
                 st.markdown('</div>', unsafe_allow_html=True)
             
             with tab2:
                 col1, col2 = st.columns([2, 1])
                 with col1:
-                    render_documents()
+                    render_documents(processed_files)
                 with col2:
                     render_status()
             

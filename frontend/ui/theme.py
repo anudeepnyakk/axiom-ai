@@ -136,6 +136,17 @@ def apply_theme():
         font-size: 13px;
         color: #808495;
     }
+
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-green { background-color: #10b981; }
+    .status-red { background-color: #ef4444; }
+    .status-gray { background-color: #9ca3af; }
     
     /* Hide spinner text */
     .stSpinner > div {

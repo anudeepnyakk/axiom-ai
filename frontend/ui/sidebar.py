@@ -49,92 +49,98 @@ def get_processed_files():
         return {}
 
 def render_sidebar():
+    """
+    Render the sidebar and return metadata needed for the main layout.
+    Returns:
+        tuple(dict, str | None): processed_files mapping and currently selected file name.
+    """
+    processed_files = {}
+    active_file = None
+
     try:
+        processed_files = get_processed_files()
+        total_chunks = sum(info.get('chunk_count', 0) for info in processed_files.values())
+
         with st.sidebar:
-            st.title("Knowledge Base")
-            
-            # Initialize session state
-            if 'processed_this_session' not in st.session_state:
-                st.session_state.processed_this_session = set()
-            
-            # Get documents from backend
-            processed_files = get_processed_files()
-            
-            # === STATS ===
-            total_chunks = sum(info.get('chunk_count', 0) for info in processed_files.values())
+            st.markdown("### Knowledge Base")
+
+            # Stats row
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Documents", len(processed_files))
+                st.metric(label="Documents", value=len(processed_files))
             with col2:
-                st.metric("Chunks", total_chunks)
-            
+                st.metric(label="Chunks", value=total_chunks)
+
             st.markdown("---")
-            
-            # === UPLOAD ===
+
+            # File upload section
+            st.markdown("#### Add Document")
             doc_limit = 5
             can_upload = len(processed_files) < doc_limit
-            
+
             uploaded_file = st.file_uploader(
-                "Add Document",
+                "Drag and drop file here",
                 type=['pdf', 'txt'],
-                help=f"Max {doc_limit} documents",
+                help="Limit 200MB per file",
                 disabled=not can_upload,
                 key="sidebar_uploader"
             )
-            
+
             if uploaded_file and can_upload:
+                if 'processed_this_session' not in st.session_state:
+                    st.session_state.processed_this_session = set()
+
                 if uploaded_file.name in st.session_state.processed_this_session:
-                    st.success(f"Ready: {uploaded_file.name}")
+                    st.success(f"Ready to process: {uploaded_file.name}")
                 else:
                     with st.status(f"Processing {uploaded_file.name}...", expanded=True) as status:
                         try:
                             if HF_MODE:
                                 import requests
                                 backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL'))
-                                
                                 if not backend_url:
                                     status.update(label="Backend disconnected", state="error")
-                                    st.error("Please check connection")
+                                    st.error("Please check backend connection")
                                 else:
-                                    status.write("Uploading to backend...")
+                                    status.write("Uploading to backend…")
                                     files = {'file': (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type or 'application/pdf')}
                                     response = requests.post(f"{backend_url}/api/upload", files=files, timeout=180)
                                     response.raise_for_status()
                                     result = response.json()
-                                    
+
                                     if result.get('success'):
                                         st.session_state.processed_this_session.add(uploaded_file.name)
-                                        status.update(label="Complete!", state="complete")
+                                        status.update(label="Complete", state="complete")
                                         st.toast(f"Indexed {uploaded_file.name}")
-                                        # Force refresh to show in list
                                         st.rerun()
                                     else:
                                         status.update(label="Failed", state="error")
                                         st.error(f"Error: {result.get('error')}")
                             else:
-                                status.update(label="Local mode unavailable", state="error")
+                                status.update(label="Unavailable in local mode", state="error")
                         except Exception as e:
                             status.update(label="Error", state="error")
                             st.error(str(e))
 
-            # === FILE LIST ===
+            st.markdown("### Active Files")
             if processed_files:
-                st.markdown("### Active Files")
-                for filename, info in processed_files.items():
-                    chunks = info.get('chunk_count', '?')
-                    with st.expander(f"📄 {filename}", expanded=False):
-                        st.caption(f"Chunks: {chunks}")
-                        st.caption("Status: Indexed")
+                file_options = list(processed_files.keys())
+                active_file = st.selectbox(
+                    "Select a file to view details",
+                    file_options,
+                    key="active_file_select"
+                )
+            else:
+                st.info("No files indexed yet.")
 
-            # === ACTIONS ===
             st.markdown("---")
             with st.expander("Settings & Tools"):
-                if st.button("Clear Knowledge Base", use_container_width=True, type="secondary"):
-                    # This is a placeholder for clear functionality
-                    st.toast("Use backend API to clear database")
-                
-                if st.button("View Logs", use_container_width=True):
-                    st.toast("Check SystemOps tab")
+                st.slider("Chunk Size", 256, 2048, 512, key="chunk_size_slider")
+                st.slider("Overlap", 0, 200, 50, key="chunk_overlap_slider")
+                st.toggle("Enable Hybrid Search", value=True, key="hybrid_toggle")
+                st.button("Clear Cache", type="secondary")
 
     except Exception as e:
         st.sidebar.error(f"Sidebar Error: {str(e)}")
+
+    return processed_files, active_file
