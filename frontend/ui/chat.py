@@ -14,108 +14,103 @@ def render_chat():
     # Get query engine from parent app
     query_engine = st.session_state.get('query_engine')
 
-    # ChatGPT-style container with max width
+    # Streamlit assistant style with circular avatars
     st.markdown("""
         <style>
-        /* ChatGPT-style centered chat container */
-        .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Message container */
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 1rem;
         }
         
-        /* User message - ChatGPT style */
-        .user-message {
-            background: #F7F7F8;
-            color: #0D0D0D;
-            padding: 16px 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-        
-        /* Bot message - ChatGPT style */
-        .bot-message {
-            background: transparent;
-            color: #0D0D0D;
-            padding: 16px 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-            font-size: 15px;
-            line-height: 1.75;
-        }
-        
-        /* Avatar styles */
+        /* Circular avatar */
         .message-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
-            display: inline-block;
-            text-align: center;
-            line-height: 32px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
             font-weight: 600;
-            margin-right: 12px;
-            vertical-align: top;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .user-avatar {
-            background: #5436DA;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
         .bot-avatar {
-            background: #19C37D;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
         
         /* Message content */
         .message-content {
+            flex: 1;
+            padding-top: 0.5rem;
+        }
+        
+        .message-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #31333F;
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+        
+        /* User message styling */
+        .user-message .message-text {
+            background: #F0F2F6;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
             display: inline-block;
-            vertical-align: top;
-            width: calc(100% - 50px);
-            padding-top: 4px;
         }
         
-        /* Input styling */
-        .stTextInput input {
-            border-radius: 12px !important;
-            border: 1px solid #D1D5DB !important;
-            padding: 14px 16px !important;
-            font-size: 15px !important;
+        /* Bot message styling */
+        .bot-message .message-text {
+            padding: 0.5rem 0;
         }
         
-        .stTextInput input:focus {
-            border-color: #5436DA !important;
-            box-shadow: 0 0 0 1px #5436DA !important;
+        /* Sources button container */
+        .sources-container {
+            margin-top: 0.75rem;
         }
         
-        /* Hide Streamlit form elements */
+        /* Input container at bottom */
+        .input-container {
+            position: sticky;
+            bottom: 0;
+            background: #FAFAFA;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        
+        /* Hide default form styling */
         .stForm {
             background: transparent !important;
             border: none !important;
         }
         
-        /* Sources button */
-        .sources-btn {
-            margin-top: 8px;
-            padding: 6px 12px;
-            background: #F3F4F6;
-            border: 1px solid #E5E7EB;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #374151;
-            cursor: pointer;
-            display: inline-block;
-        }
-        
-        .sources-btn:hover {
-            background: #E5E7EB;
+        /* Title styling */
+        .chat-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #31333F;
+            margin-bottom: 2rem;
+            text-align: center;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Render chat history with ChatGPT style
+    # Show title if no chat history
+    if not st.session_state.chat_history:
+        st.markdown('<div class="chat-title">Axiom AI assistant</div>', unsafe_allow_html=True)
+
+    # Render chat history with Streamlit assistant style
     for i, item in enumerate(st.session_state.chat_history):
         if len(item) == 2:
             role, msg = item
@@ -125,39 +120,45 @@ def render_chat():
         
         if role == "user":
             st.markdown(f"""
-                <div class="user-message">
-                    <span class="message-avatar user-avatar">👤</span>
-                    <div class="message-content">{msg}</div>
+                <div class="chat-message user-message">
+                    <div class="message-avatar user-avatar">G</div>
+                    <div class="message-content">
+                        <div class="message-text">{msg}</div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
-                <div class="bot-message">
-                    <span class="message-avatar bot-avatar">AI</span>
-                    <div class="message-content">{msg}</div>
+                <div class="chat-message bot-message">
+                    <div class="message-avatar bot-avatar">A</div>
+                    <div class="message-content">
+                        <div class="message-text">{msg}</div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
             
             # Sources button below bot message
             if sources:
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if st.button(f"📎 View {len(sources)} sources", key=f"src_{i}", use_container_width=False):
+                col_spacer, col_btn = st.columns([0.7, 11])
+                with col_btn:
+                    if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
                         st.session_state.current_sources = sources
                         st.session_state.drawer_open = True
                         if 'uploading' not in st.session_state or not st.session_state.uploading:
                             st.rerun()
 
-    # Spacing before input
-    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
-
-    # Input box - ChatGPT style at bottom
+    # Input box at bottom
+    st.markdown('<div class="input-container"></div>', unsafe_allow_html=True)
+    
     with st.form("chat_input", clear_on_submit=True):
-        col1, col2 = st.columns([6, 1])
-        with col1:
-            text = st.text_input("Message Axiom", label_visibility="collapsed", placeholder="Ask anything about your documents...")
+        text = st.text_input(
+            "Message",
+            label_visibility="collapsed",
+            placeholder="Ask a follow-up..."
+        )
+        col1, col2 = st.columns([1, 11])
         with col2:
-            sent = st.form_submit_button("Send", use_container_width=True)
+            sent = st.form_submit_button("Send", type="primary", use_container_width=False)
 
     if sent and text.strip():
         st.session_state.chat_history.append(("user", text))
