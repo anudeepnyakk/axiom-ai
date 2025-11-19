@@ -55,7 +55,7 @@ def main():
     import sys
     sys.stdout.flush()
     
-    # Apply theme
+    # Apply theme FIRST
     try:
         apply_theme()
     except Exception as e:
@@ -98,19 +98,31 @@ def main():
     st.session_state['backend_url'] = BACKEND_URL
     st.session_state['backend_connected'] = backend_connected
 
-    # Render UI
+    # Render UI with centered layout wrapper
     try:
         render_sidebar()
         
-        tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
-        with tab1:
-            render_chat()
-        with tab2:
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                render_documents()
-            with col2:
-                render_status()
+        # Page Layout Rewrite - Centered container like Streamlit assistant
+        with st.container():
+            st.markdown('<div class="main-block">', unsafe_allow_html=True)
+            
+            st.markdown("## AXIOM — Grounded intelligence.")
+            
+            tab1, tab2 = st.tabs(["🧠 Intelligence", "📊 SystemOps"])
+            
+            with tab1:
+                st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+                render_chat()
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with tab2:
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    render_documents()
+                with col2:
+                    render_status()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
         
         render_drawer()
         
@@ -121,6 +133,3 @@ def main():
 # Only run main if this file is executed directly (not imported)
 if __name__ == "__main__":
     main()
-
-
-

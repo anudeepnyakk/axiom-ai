@@ -14,75 +14,7 @@ def render_chat():
     # Get query engine from parent app
     query_engine = st.session_state.get('query_engine')
 
-    # Streamlit AI assistant exact styling
-    st.markdown("""
-        <style>
-        /* Message bubbles */
-        .user-msg {
-            background: #F0F2F6;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            max-width: 80%;
-            margin-left: auto;
-            font-size: 15px;
-            line-height: 1.6;
-            color: #31333F;
-        }
-        
-        .bot-msg {
-            background: transparent;
-            padding: 12px 0;
-            margin-bottom: 16px;
-            font-size: 15px;
-            line-height: 1.7;
-            color: #31333F;
-        }
-        
-        /* Circular avatars */
-        .message-with-avatar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        
-        .user-avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .bot-avatar {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-        
-        .message-content {
-            flex: 1;
-            padding-top: 6px;
-        }
-        
-        /* Sources button */
-        .sources-btn-container {
-            margin-left: 48px;
-            margin-top: -8px;
-            margin-bottom: 16px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Render chat history
+    # Render chat history - EXACT Streamlit assistant style
     for i, item in enumerate(st.session_state.chat_history):
         if len(item) == 2:
             role, msg = item
@@ -91,47 +23,27 @@ def render_chat():
             role, msg, sources = item
         
         if role == "user":
-            # User message (right-aligned bubble)
             st.markdown(f'<div class="user-msg">{msg}</div>', unsafe_allow_html=True)
         else:
-            # Bot message (left-aligned with avatar)
-            st.markdown(f"""
-                <div class="message-with-avatar">
-                    <div class="avatar bot-avatar">A</div>
-                    <div class="message-content">
-                        <div class="bot-msg">{msg}</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="bot-msg">{msg}</div>', unsafe_allow_html=True)
             
             # Sources button
             if sources:
-                st.markdown('<div class="sources-btn-container">', unsafe_allow_html=True)
                 if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
                     st.session_state.current_sources = sources
                     st.session_state.drawer_open = True
                     if 'uploading' not in st.session_state or not st.session_state.uploading:
                         st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
 
-    # Spacing before input
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Text Input + Button Row - EXACT Streamlit assistant style
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        user_query = st.text_input("Ask Axiom…", key="chat_input", label_visibility="collapsed", placeholder="Ask a follow-up...")
+    with col2:
+        send = st.button("Send", use_container_width=True, type="primary")
 
-    # Input form - Streamlit assistant style
-    with st.form("chat_input", clear_on_submit=True):
-        col1, col2 = st.columns([6, 1])
-        with col1:
-            text = st.text_input(
-                "Message",
-                label_visibility="collapsed",
-                placeholder="Ask a follow-up...",
-                key="chat_input_field"
-            )
-        with col2:
-            sent = st.form_submit_button("Send", type="primary", use_container_width=True)
-
-    if sent and text.strip():
-        st.session_state.chat_history.append(("user", text))
+    if send and user_query.strip():
+        st.session_state.chat_history.append(("user", user_query))
         
         # Check if we're in HuggingFace mode (API-based)
         backend_url = st.session_state.get('backend_url')
@@ -144,7 +56,7 @@ def render_chat():
                     import requests
                     response = requests.post(
                         f"{backend_url}/api/query",
-                        json={"question": text, "top_k": 3},
+                        json={"question": user_query, "top_k": 3},
                         timeout=30
                     )
                     response.raise_for_status()
@@ -159,7 +71,7 @@ def render_chat():
             # Local mode: use query engine directly
             with st.spinner(""):
                 try:
-                    result = query_engine.query(text, top_k=3)
+                    result = query_engine.query(user_query, top_k=3)
                     answer = result.answer
                     sources = [{"text": chunk.text[:200] + "...", "metadata": chunk.metadata} 
                               for chunk in result.context_chunks]

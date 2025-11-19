@@ -3,38 +3,55 @@ import sys
 from pathlib import Path
 import json
 import os
+import pandas as pd
 
-# Only add parent directory if not in HuggingFace mode (frontend-only)
-# In HF mode, we don't need backend imports
+# Check if we're in HuggingFace mode (frontend-only)
 HF_MODE = os.getenv("BACKEND_URL") is not None and os.getenv("BACKEND_URL") != "http://localhost:8000"
-if not HF_MODE:
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+def get_processed_files():
+    """Helper to get documents for the main view"""
+    if HF_MODE:
+        try:
+            import requests
+            backend_url = st.session_state.get('backend_url', os.getenv('BACKEND_URL'))
+            if not backend_url:
+                return {}
+            response = requests.get(f"{backend_url}/api/documents", timeout=5)
+            if response.status_code == 200:
+                return response.json().get('documents', {})
+        except:
+            pass
+    return {}
 
 def render_documents():
-    st.subheader("📄 Documents")
+    st.markdown("### 📄 Document Index")
     
-    # Load actual processed files
-    frontend_dir = Path(__file__).parent.parent
-    tracker_file = frontend_dir / "processed_files.json"
+    files = get_processed_files()
     
-    if tracker_file.exists():
-        try:
-            with open(tracker_file, 'r') as f:
-                processed = json.load(f)
-            
-            if processed:
-                st.success(f"✅ {len(processed)} document(s) in index")
-                
-                for filename, info in processed.items():
-                    chunk_count = info.get('chunk_count', '?')
-                    with st.expander(f"📄 {filename}"):
-                        st.metric("Chunks", chunk_count)
-                        st.text(f"Status: Indexed")
-                        if 'timestamp' in info:
-                            st.caption(f"Last modified: {info['timestamp'][:10]}")
-            else:
-                st.info("No documents indexed yet. Upload documents in the sidebar.")
-        except Exception as e:
-            st.error(f"Error loading documents: {e}")
+    if files:
+        # Convert to dataframe for nice display
+        data = []
+        for filename, info in files.items():
+            data.append({
+                "Document Name": filename,
+                "Chunks": info.get('chunk_count', 0),
+                "Status": "✅ Indexed",
+                "Type": "PDF" if filename.lower().endswith('.pdf') else "Text"
+            })
+        
+        df = pd.DataFrame(data)
+        st.dataframe(
+            df,
+            column_config={
+                "Document Name": st.column_config.TextColumn("Document", width="large"),
+                "Chunks": st.column_config.NumberColumn("Chunks", format="%d"),
+                "Status": st.column_config.TextColumn("Status"),
+                "Type": st.column_config.TextColumn("Type")
+            },
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        st.caption(f"Total documents: {len(files)}")
     else:
-        st.info("No documents indexed yet. Upload documents in the sidebar.")
+        st.info("No documents found. Upload files using the sidebar to get started.")
