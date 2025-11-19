@@ -68,31 +68,27 @@ def main():
         backend_connected = False
         backend_error = str(e)
 
-    if backend_connected:
-        status_class = "health-dot"
-        status_text = "Backend Connected"
-    else:
-        status_class = "health-dot-error"
-        status_text = "Backend Offline"
+    # Header row (title + status) – avoids duplicate headers
+    title_col, status_col = st.columns([4, 1])
+    with title_col:
+        st.markdown(
+            '**AXIOM** <span style="color:#9ca3af; font-weight:400;">Grounded intelligence.</span>',
+            unsafe_allow_html=True,
+        )
 
-    # Show header
-    st.markdown(f"""
-    <div class="header">
-      <div class="header-left">
-        <span class="logo">AXIOM</span>
-        <span class="tagline">Grounded intelligence.</span>
-      </div>
-      <div class="header-right">
-        <span class="{status_class}"></span>
-        <span class="health-text">{status_text}</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Show backend status
-    if not backend_connected:
-        st.warning(f"⚠️ Backend not connected")
-        st.info(f"Backend URL: `{BACKEND_URL}`")
+    with status_col:
+        status_class = "status-green" if backend_connected else "status-red"
+        status_text = "Backend Connected" if backend_connected else "Backend Offline"
+        st.markdown(
+            f"""
+            <div style="text-align: right; font-size: 0.875rem; color: #4b5563;">
+                <span class="status-indicator {status_class}"></span>{status_text}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if not backend_connected:
+            st.caption(f"`{BACKEND_URL}`")
 
     # Store in session state
     st.session_state['backend_url'] = BACKEND_URL
@@ -105,8 +101,6 @@ def main():
         # Page Layout Rewrite - Centered container like Streamlit assistant
         with st.container():
             st.markdown('<div class="main-block">', unsafe_allow_html=True)
-            
-            st.markdown("## AXIOM — Grounded intelligence.")
             
             tab1, tab2 = st.tabs(["🧠 Intelligence", "📊 SystemOps"])
             
