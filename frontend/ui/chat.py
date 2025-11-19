@@ -1,161 +1,97 @@
 import streamlit as st
+from typing import List, Dict, Any
+
 
 def init_state():
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+    if "messages" not in st.session_state:
+        st.session_state.messages: List[Dict[str, Any]] = [
+            {
+                "role": "assistant",
+                "content": "Hello. I am AXIOM. I have processed your documents. How can I help you today?",
+            }
+        ]
     if "drawer_open" not in st.session_state:
         st.session_state.drawer_open = False
     if "current_sources" not in st.session_state:
         st.session_state.current_sources = []
+    if "awaiting_response" not in st.session_state:
+        st.session_state.awaiting_response = False
 
-def render_chat():
+
+def call_backend(question: str) -> Dict[str, Any]:
+    backend_url = st.session_state.get("backend_url")
+    if backend_url and st.session_state.get("backend_connected", False):
+        import requests
+
+        response = requests.post(
+            f"{backend_url}/api/query",
+            json={"question": question, "top_k": 3},
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    query_engine = st.session_state.get("query_engine")
+    if query_engine:
+        result = query_engine.query(question, top_k=3)
+        sources = [
+            {"text": chunk.text[:200] + "...", "metadata": chunk.metadata}
+            for chunk in result.context_chunks
+        ]
+        return {"answer": result.answer, "sources": sources}
+
+    raise RuntimeError("Backend not connected. Please check configuration.")
+
+
+def render_chat(active_file: str | None = None):
     init_state()
-    
-    # Get query engine from parent app
-    query_engine = st.session_state.get('query_engine')
 
-    # Add inline CSS for message styling
-    st.markdown("""
-    <style>
-    .message-row {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
-        align-items: flex-start;
-    }
-    
-    .avatar-circle {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 20px;
-    }
-    
-    .user-avatar {
-        background: #ff4b4b;
-    }
-    
-    .bot-avatar {
-        background: #ff8700;
-    }
-    
-    .message-content {
-        flex: 1;
-        padding-top: 6px;
-    }
-    
-    .user-msg {
-        background: #f2f2f2;
-        padding: 12px 15px;
-        border-radius: 8px;
-        margin-bottom: 0;
-        font-size: 15px;
-        line-height: 1.6;
-        color: #262730;
-    }
-    
-    .bot-msg {
-        background: transparent;
-        padding: 0;
-        margin-bottom: 0;
-        font-size: 15px;
-        line-height: 1.7;
-        color: #262730;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Render existing messages with Streamlit chat components
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message["role"] == "assistant" and message.get("sources"):
+                with st.expander("📎 Sources"):
+                    for source in message["sources"]:
+                        st.write(source.get("metadata", {}).get("source", "Unknown"))
 
-    # Render chat history - EXACT Streamlit assistant style with avatars
-    for i, item in enumerate(st.session_state.chat_history):
-        if len(item) == 2:
-            role, msg = item
-            sources = []
-        else:
-            role, msg, sources = item
-        
-        if role == "user":
-            # User message with red avatar
-            st.markdown(f"""
-            <div class="message-row">
-                <div class="avatar-circle user-avatar">😊</div>
-                <div class="message-content">
-                    <div class="user-msg">{msg}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Bot message with orange avatar
-            st.markdown(f"""
-            <div class="message-row">
-                <div class="avatar-circle bot-avatar">🔷</div>
-                <div class="message-content">
-                    <div class="bot-msg">{msg}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Sources button
-            if sources:
-                col_spacer, col_btn = st.columns([0.5, 11.5])
-                with col_btn:
-                    if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
-                        st.session_state.current_sources = sources
-                        st.session_state.drawer_open = True
-                        if 'uploading' not in st.session_state or not st.session_state.uploading:
-                            st.rerun()
-
-    # Text Input + Button Row - EXACT Streamlit assistant style
     st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2 = st.columns([6, 1])
-    with col1:
-        user_query = st.text_input("Ask Axiom…", key="chat_input", label_visibility="collapsed", placeholder="Ask a follow-up...")
-    with col2:
-        send = st.button("Send", use_container_width=True, type="primary")
 
-    if send and user_query.strip():
-        st.session_state.chat_history.append(("user", user_query))
-        
-        # Check if we're in HuggingFace mode (API-based)
-        backend_url = st.session_state.get('backend_url')
-        backend_connected = st.session_state.get('backend_connected', False)
-        
-        if backend_connected and backend_url:
-            # HuggingFace mode: use API calls
-            with st.spinner(""):
-                try:
-                    import requests
-                    response = requests.post(
-                        f"{backend_url}/api/query",
-                        json={"question": user_query, "top_k": 3},
-                        timeout=30
-                    )
-                    response.raise_for_status()
-                    result = response.json()
+    # Input area (form for aligned input + button)
+    with st.form(key="query_form", clear_on_submit=True):
+        cols = st.columns([6, 1])
+        with cols[0]:
+            user_input = st.text_input(
+                "Query",
+                placeholder="Ask a follow-up...",
+                label_visibility="collapsed",
+            )
+        with cols[1]:
+            submit_button = st.form_submit_button("Send", type="primary", use_container_width=True)
+
+        if submit_button and user_input.strip():
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            st.session_state.awaiting_response = True
+            st.rerun()
+
+    # Handle assistant response if needed
+    if st.session_state.awaiting_response and st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+        last_question = st.session_state.messages[-1]["content"]
+        try:
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    result = call_backend(last_question)
                     answer = result.get("answer", "No answer returned.")
                     sources = result.get("sources", [])
-                    st.session_state.chat_history.append(("bot", answer, sources))
-                except Exception as e:
-                    error_msg = f"I encountered an error: {str(e)}\n\nPlease check backend connection."
-                    st.session_state.chat_history.append(("bot", error_msg, []))
-        elif query_engine:
-            # Local mode: use query engine directly
-            with st.spinner(""):
-                try:
-                    result = query_engine.query(user_query, top_k=3)
-                    answer = result.answer
-                    sources = [{"text": chunk.text[:200] + "...", "metadata": chunk.metadata} 
-                              for chunk in result.context_chunks]
-                    st.session_state.chat_history.append(("bot", answer, sources))
-                except Exception as e:
-                    error_msg = f"I encountered an error: {str(e)}\n\nPlease make sure documents are ingested."
-                    st.session_state.chat_history.append(("bot", error_msg, []))
-        else:
-            st.session_state.chat_history.append(("bot", "Backend not connected. Please check configuration.", []))
-        
-        # Safe rerun - only if not currently uploading
-        if 'uploading' not in st.session_state or not st.session_state.uploading:
-            st.rerun()
+                    st.markdown(answer)
+
+            st.session_state.messages.append(
+                {"role": "assistant", "content": answer, "sources": sources}
+            )
+        except Exception as e:
+            error_msg = f"I encountered an error: {str(e)}"
+            with st.chat_message("assistant"):
+                st.error(error_msg)
+            st.session_state.messages.append({"role": "assistant", "content": error_msg, "sources": []})
+        finally:
+            st.session_state.awaiting_response = False
