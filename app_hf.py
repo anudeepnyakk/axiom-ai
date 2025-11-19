@@ -82,10 +82,10 @@ def main():
     try:
         render_sidebar()
         
-        # Title with restart button
+        # Title with restart button - Streamlit assistant style
         col_title, col_restart = st.columns([6, 1])
         with col_title:
-            st.title("Axiom AI")
+            st.markdown('<h1 style="font-size: 48px; font-weight: 700; color: #31333F; margin-bottom: 0;">Axiom AI assistant</h1>', unsafe_allow_html=True)
         with col_restart:
             if st.button("🔄 Restart", key="restart_btn"):
                 # Clear chat history
