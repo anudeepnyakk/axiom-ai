@@ -33,6 +33,61 @@ def apply_theme():
         padding-left: 3rem;
         padding-right: 3rem;
     }
+    
+    /* Custom header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #E0E0E0;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .logo {
+        font-size: 28px;
+        font-weight: 700;
+        color: #31333F;
+        letter-spacing: -0.5px;
+    }
+    
+    .tagline {
+        font-size: 14px;
+        color: #808495;
+        font-weight: 400;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .health-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #00C853;
+    }
+    
+    .health-dot-error {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #FF4B4B;
+    }
+    
+    .health-text {
+        font-size: 13px;
+        color: #808495;
+        font-weight: 500;
+    }
 
     /* Sidebar styling */
     [data-testid="stSidebar"] {
@@ -184,7 +239,7 @@ def apply_theme():
     .stTabs [data-baseweb="tab-list"] {
         gap: 2rem;
         background-color: transparent;
-        border-bottom: none;
+        border-bottom: 1px solid #E0E0E0;
     }
     
     .stTabs [data-baseweb="tab"] {

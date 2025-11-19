@@ -68,34 +68,41 @@ def main():
         backend_connected = False
         backend_error = str(e)
 
+    if backend_connected:
+        status_class = "health-dot"
+        status_text = "Backend Connected"
+    else:
+        status_class = "health-dot-error"
+        status_text = "Backend Offline"
+
+    # Show header
+    st.markdown(f"""
+    <div class="header">
+      <div class="header-left">
+        <span class="logo">AXIOM</span>
+        <span class="tagline">Grounded intelligence.</span>
+      </div>
+      <div class="header-right">
+        <span class="{status_class}"></span>
+        <span class="health-text">{status_text}</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Show backend status
+    if not backend_connected:
+        st.warning(f"⚠️ Backend not connected")
+        st.info(f"Backend URL: `{BACKEND_URL}`")
+
     # Store in session state
     st.session_state['backend_url'] = BACKEND_URL
     st.session_state['backend_connected'] = backend_connected
-
-    # Show backend status in sidebar only if disconnected
-    if not backend_connected:
-        with st.sidebar:
-            st.error("⚠️ Backend Offline")
-            st.caption(f"`{BACKEND_URL}`")
 
     # Render UI
     try:
         render_sidebar()
         
-        # Title with restart button - Streamlit assistant style
-        col_title, col_restart = st.columns([6, 1])
-        with col_title:
-            st.markdown('<h1 style="font-size: 48px; font-weight: 700; color: #31333F; margin-bottom: 0;">Axiom AI assistant</h1>', unsafe_allow_html=True)
-        with col_restart:
-            if st.button("🔄 Restart", key="restart_btn"):
-                # Clear chat history
-                st.session_state.chat_history = []
-                st.rerun()
-        
-        st.markdown("---")
-        
-        # Simple tabs without icons - cleaner look
-        tab1, tab2 = st.tabs(["Chat", "Documents"])
+        tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
         with tab1:
             render_chat()
         with tab2:
