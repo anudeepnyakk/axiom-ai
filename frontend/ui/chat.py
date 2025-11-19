@@ -14,7 +14,62 @@ def render_chat():
     # Get query engine from parent app
     query_engine = st.session_state.get('query_engine')
 
-    # Render chat history - EXACT Streamlit assistant style
+    # Add inline CSS for message styling
+    st.markdown("""
+    <style>
+    .message-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        align-items: flex-start;
+    }
+    
+    .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 20px;
+    }
+    
+    .user-avatar {
+        background: #ff4b4b;
+    }
+    
+    .bot-avatar {
+        background: #ff8700;
+    }
+    
+    .message-content {
+        flex: 1;
+        padding-top: 6px;
+    }
+    
+    .user-msg {
+        background: #f2f2f2;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 0;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #262730;
+    }
+    
+    .bot-msg {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 0;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #262730;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Render chat history - EXACT Streamlit assistant style with avatars
     for i, item in enumerate(st.session_state.chat_history):
         if len(item) == 2:
             role, msg = item
@@ -23,19 +78,38 @@ def render_chat():
             role, msg, sources = item
         
         if role == "user":
-            st.markdown(f'<div class="user-msg">{msg}</div>', unsafe_allow_html=True)
+            # User message with red avatar
+            st.markdown(f"""
+            <div class="message-row">
+                <div class="avatar-circle user-avatar">😊</div>
+                <div class="message-content">
+                    <div class="user-msg">{msg}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="bot-msg">{msg}</div>', unsafe_allow_html=True)
+            # Bot message with orange avatar
+            st.markdown(f"""
+            <div class="message-row">
+                <div class="avatar-circle bot-avatar">🔷</div>
+                <div class="message-content">
+                    <div class="bot-msg">{msg}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Sources button
             if sources:
-                if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
-                    st.session_state.current_sources = sources
-                    st.session_state.drawer_open = True
-                    if 'uploading' not in st.session_state or not st.session_state.uploading:
-                        st.rerun()
+                col_spacer, col_btn = st.columns([0.5, 11.5])
+                with col_btn:
+                    if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
+                        st.session_state.current_sources = sources
+                        st.session_state.drawer_open = True
+                        if 'uploading' not in st.session_state or not st.session_state.uploading:
+                            st.rerun()
 
     # Text Input + Button Row - EXACT Streamlit assistant style
+    st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns([6, 1])
     with col1:
         user_query = st.text_input("Ask Axiom…", key="chat_input", label_visibility="collapsed", placeholder="Ask a follow-up...")
