@@ -14,7 +14,75 @@ def render_chat():
     # Get query engine from parent app
     query_engine = st.session_state.get('query_engine')
 
-    # render history with proper chat layout
+    # Streamlit AI assistant exact styling
+    st.markdown("""
+        <style>
+        /* Message bubbles */
+        .user-msg {
+            background: #F0F2F6;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            max-width: 80%;
+            margin-left: auto;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #31333F;
+        }
+        
+        .bot-msg {
+            background: transparent;
+            padding: 12px 0;
+            margin-bottom: 16px;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #31333F;
+        }
+        
+        /* Circular avatars */
+        .message-with-avatar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .bot-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+            padding-top: 6px;
+        }
+        
+        /* Sources button */
+        .sources-btn-container {
+            margin-left: 48px;
+            margin-top: -8px;
+            margin-bottom: 16px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Render chat history
     for i, item in enumerate(st.session_state.chat_history):
         if len(item) == 2:
             role, msg = item
@@ -22,47 +90,45 @@ def render_chat():
         else:
             role, msg, sources = item
         
-        # Create columns for proper alignment
         if role == "user":
-            # User messages on the right
-            col1, col2 = st.columns([1, 4])
-            with col2:
-                st.markdown(f"""
-                <div style='display: flex; justify-content: flex-end; margin: 8px 0;'>
-                    <div style='background: #1A73E8; color: white; padding: 12px 18px; 
-                                border-radius: 18px 18px 4px 18px; max-width: 80%;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-                        {msg}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+            # User message (right-aligned bubble)
+            st.markdown(f'<div class="user-msg">{msg}</div>', unsafe_allow_html=True)
         else:
-            # Bot messages on the left
-            col1, col2 = st.columns([4, 1])
-            with col1:
-                st.markdown(f"""
-                <div style='display: flex; justify-content: flex-start; margin: 8px 0;'>
-                    <div style='background: #F3F4F6; color: #111827; padding: 12px 18px; 
-                                border-radius: 18px 18px 18px 4px; max-width: 80%;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.08);'>
-                        {msg}
+            # Bot message (left-aligned with avatar)
+            st.markdown(f"""
+                <div class="message-with-avatar">
+                    <div class="avatar bot-avatar">A</div>
+                    <div class="message-content">
+                        <div class="bot-msg">{msg}</div>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
-                
-                # Sources button below bot message
-                if sources:
-                    if st.button(f"📎 {len(sources)} Sources", key=f"chip_{i}", use_container_width=False):
-                        st.session_state.current_sources = sources
-                        st.session_state.drawer_open = True
-                        # Mark that we need to rerun (safer than immediate rerun during upload)
-                        if 'uploading' not in st.session_state or not st.session_state.uploading:
-                            st.rerun()
+            """, unsafe_allow_html=True)
+            
+            # Sources button
+            if sources:
+                st.markdown('<div class="sources-btn-container">', unsafe_allow_html=True)
+                if st.button(f"📎 {len(sources)} sources", key=f"src_{i}", use_container_width=False):
+                    st.session_state.current_sources = sources
+                    st.session_state.drawer_open = True
+                    if 'uploading' not in st.session_state or not st.session_state.uploading:
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
-    # input box
+    # Spacing before input
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Input form - Streamlit assistant style
     with st.form("chat_input", clear_on_submit=True):
-        text = st.text_input("Ask Axiom…")
-        sent = st.form_submit_button("Send")
+        col1, col2 = st.columns([6, 1])
+        with col1:
+            text = st.text_input(
+                "Message",
+                label_visibility="collapsed",
+                placeholder="Ask a follow-up...",
+                key="chat_input_field"
+            )
+        with col2:
+            sent = st.form_submit_button("Send", type="primary", use_container_width=True)
 
     if sent and text.strip():
         st.session_state.chat_history.append(("user", text))
@@ -73,7 +139,7 @@ def render_chat():
         
         if backend_connected and backend_url:
             # HuggingFace mode: use API calls
-            with st.spinner("🔍 Searching knowledge base..."):
+            with st.spinner(""):
                 try:
                     import requests
                     response = requests.post(
@@ -87,22 +153,22 @@ def render_chat():
                     sources = result.get("sources", [])
                     st.session_state.chat_history.append(("bot", answer, sources))
                 except Exception as e:
-                    error_msg = f"⚠️ Error: {str(e)}\n\nPlease check backend connection."
+                    error_msg = f"I encountered an error: {str(e)}\n\nPlease check backend connection."
                     st.session_state.chat_history.append(("bot", error_msg, []))
         elif query_engine:
             # Local mode: use query engine directly
-            with st.spinner("🔍 Searching knowledge base..."):
+            with st.spinner(""):
                 try:
-                    result = query_engine.query(text, top_k=3)  # Reduced to 3 for speed
+                    result = query_engine.query(text, top_k=3)
                     answer = result.answer
                     sources = [{"text": chunk.text[:200] + "...", "metadata": chunk.metadata} 
                               for chunk in result.context_chunks]
                     st.session_state.chat_history.append(("bot", answer, sources))
                 except Exception as e:
-                    error_msg = f"⚠️ Error: {str(e)}\n\nPlease make sure documents are ingested."
+                    error_msg = f"I encountered an error: {str(e)}\n\nPlease make sure documents are ingested."
                     st.session_state.chat_history.append(("bot", error_msg, []))
         else:
-            st.session_state.chat_history.append(("bot", "⚠️ Backend not connected. Please check configuration.", []))
+            st.session_state.chat_history.append(("bot", "Backend not connected. Please check configuration.", []))
         
         # Safe rerun - only if not currently uploading
         if 'uploading' not in st.session_state or not st.session_state.uploading:
