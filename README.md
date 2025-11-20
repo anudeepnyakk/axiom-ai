@@ -1,15 +1,4 @@
----
-title: "Axiom AI: Production-Grade Multilingual RAG Engine"
-emoji: 🤖
-colorFrom: blue
-colorTo: purple
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
----
-
-# Axiom AI
+# Axiom AI: Production-Grade Multilingual RAG Engine
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![Docker](https://img.shields.io/badge/container-docker-blue)
@@ -56,20 +45,18 @@ graph TD
         Prometheus[Prometheus Metrics] -.-> Chroma
         Prometheus -.-> Gateway
     end
-````
+```
 
 **Core Components:**
+* **Vector Store:** ChromaDB with HNSW indexing.
+* **Embeddings:** `all-MiniLM-L6-v2` (Optimized for sentence-level similarity).
+* **Synthesis:** GPT-4o-mini with strict instruction tuning for source citation.
 
-  * **Vector Store:** ChromaDB with HNSW indexing.
-  * **Embeddings:** `all-MiniLM-L6-v2` (Optimized for sentence-level similarity).
-  * **Synthesis:** GPT-4o-mini with strict instruction tuning for source citation.
-
------
+---
 
 ## ⚡ Quick Start
 
 ### Option 1: Docker (Recommended)
-
 Spin up the entire stack (App, ChromaDB, Prometheus) with one command.
 
 ```bash
@@ -85,7 +72,6 @@ docker-compose up --build
 ```
 
 ### Option 2: Local Python
-
 ```bash
 pip install -r requirements.txt
 export OPENAI_API_KEY="sk-your-key"
@@ -96,30 +82,26 @@ python scripts/ingest.py
 # Run Frontend
 streamlit run frontend/app.py
 ```
-
 *UI launches at `http://localhost:8501`*
 
------
+---
 
 ## 🛡️ Key Features
 
-### 1\. Observability & Monitoring
+### 1. Observability & Monitoring
+* **Prometheus Metrics:** Real-time tracking of retrieval latency, token usage, and error rates.
+* **Distributed Tracing:** JSON structured logging with request ID correlation.
 
-  * **Prometheus Metrics:** Real-time tracking of retrieval latency, token usage, and error rates.
-  * **Distributed Tracing:** JSON structured logging with request ID correlation.
+### 2. Enterprise-Grade Security
+* **PII Redaction:** Middleware automatically detects and redacts sensitive data (emails, phone numbers).
+* **Constant-Time Auth:** API key comparison uses constant-time algorithms to prevent timing attacks.
+* **Non-Root Containers:** All Docker services run as non-privileged users.
 
-### 2\. Enterprise-Grade Security
+### 3. Fault Tolerance
+* **Retry Logic:** Implements exponential backoff for LLM calls.
+* **Degraded Mode:** System maintains retrieval capability even if generation service fails.
 
-  * **PII Redaction:** Middleware automatically detects and redacts sensitive data (emails, phone numbers).
-  * **Constant-Time Auth:** API key comparison uses constant-time algorithms to prevent timing attacks.
-  * **Non-Root Containers:** All Docker services run as non-privileged users.
-
-### 3\. Fault Tolerance
-
-  * **Retry Logic:** Implements exponential backoff for LLM calls.
-  * **Degraded Mode:** System maintains retrieval capability even if generation service fails.
-
------
+---
 
 ## 📚 Documentation
 * [**Architecture Design**](docs/architecture.md): Deep dive into component interaction.
@@ -128,7 +110,4 @@ streamlit run frontend/app.py
 * [**Docker Deployment**](docs/DOCKER_SETUP.md): Production deployment guide.
 
 ## License
-
 Distributed under the MIT License. See `LICENSE` for more information.
-
-```
