@@ -1,5 +1,5 @@
 ---
-title: Axiom AI: Production-Grade Multilingual RAG Engine
+title: "Axiom AI: Production-Grade Multilingual RAG Engine"
 emoji: 🤖
 colorFrom: blue
 colorTo: purple
