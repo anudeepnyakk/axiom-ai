@@ -1,25 +1,23 @@
 """
-Axiom AI - Frontend Only (HuggingFace Spaces)
+Axiom AI - Split-Pane RAG Interface (HuggingFace Spaces)
 
-This is a frontend-only Streamlit app that calls the backend API.
-Backend should be deployed separately (Railway, Render, Fly.io, etc.)
+Production-grade RAG interface with split-pane layout:
+- Left: PDF viewer (source document)
+- Right: Chat interface (intelligence)
+- Sidebar: Uploads, metrics, and system health
 """
 
 import streamlit as st
 import requests
 import os
 import traceback
-
-# Note: Page config is set in streamlit_app.py to ensure it's set first
+from streamlit_pdf_viewer import pdf_viewer
 
 # Try to import UI components with error handling
 try:
     from ui.theme import apply_theme
     from ui.sidebar import render_sidebar
-    from ui.chat import render_chat
-    from ui.drawer import render_drawer
-    from ui.documents import render_documents
-    from ui.status import render_status
+    from ui.chat import render_chat_split_pane
 except ImportError as e:
     st.error(f"⚠️ Import Error: {str(e)}")
     st.code(traceback.format_exc())
@@ -30,11 +28,11 @@ except Exception as e:
     st.code(traceback.format_exc())
     st.stop()
 
+# Apply theme
 try:
     apply_theme()
 except Exception as e:
     st.warning(f"⚠️ Theme Error: {str(e)}")
-    # Continue anyway
 
 # Backend API URL (set via environment variable or default)
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
@@ -52,11 +50,9 @@ def query_backend(question: str, top_k: int = 3):
     except Exception as e:
         return {"error": str(e), "answer": None, "sources": []}
 
-# Check backend connection (non-blocking, with timeout)
 def check_backend_status():
     """Check if backend is reachable"""
     try:
-        # Use shorter timeout to prevent hanging
         response = requests.get(f"{BACKEND_URL}/health", timeout=2)
         return response.status_code == 200, None
     except requests.exceptions.Timeout:
@@ -66,109 +62,86 @@ def check_backend_status():
     except Exception as e:
         return False, str(e)
 
-# Initialize backend status (with error handling, non-blocking)
-# Wrap in try-except to prevent crashes
-try:
-    backend_connected, backend_error = check_backend_status()
-except Exception as e:
-    backend_connected = False
-    backend_error = str(e)
-    # Don't show warning here - will show below if needed
-
-if backend_connected:
-    status_class = "health-dot"
-    status_text = "Backend Connected"
-else:
-    status_class = "health-dot-error"
-    status_text = "Backend Offline"
-
-# Show header with backend status
-st.markdown(f"""
-<div class="header">
-  <div class="header-left">
-    <span class="logo">AXIOM</span>
-    <span class="tagline">Grounded intelligence.</span>
-  </div>
-  <div class="header-right">
-    <span class="{status_class}"></span>
-    <span class="health-text">{status_text}</span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Show backend status
-if not backend_connected:
-    st.warning(f"⚠️ Backend not connected. Set BACKEND_URL environment variable.")
-    st.info(f"Current backend URL: `{BACKEND_URL}`")
-    st.code(f"# Set in HF Spaces Settings → Variables:\nBACKEND_URL=https://your-backend-url.com")
-
-# Store backend URL in session state for chat component
-st.session_state['backend_url'] = BACKEND_URL
-st.session_state['backend_connected'] = backend_connected
-
-# Wrap entire app rendering in error handling to prevent blank screens
-try:
-    # Render UI components with error handling
-    # Critical: Wrap sidebar separately to catch upload errors
-    sidebar_error = None
+def get_processed_files():
+    """Get list of processed files from backend API"""
     try:
-        render_sidebar()
+        response = requests.get(f"{BACKEND_URL}/api/documents", timeout=5)
+        if response.status_code == 200:
+            return response.json().get('documents', {})
+    except:
+        pass
+    return {}
+
+def main():
+    """Main application entry point"""
+    # Initialize backend status
+    try:
+        backend_connected, backend_error = check_backend_status()
     except Exception as e:
-        sidebar_error = e
-        st.error(f"⚠️ Sidebar Error: {str(e)}")
-        st.code(traceback.format_exc())
-        # Continue rendering rest of app even if sidebar fails
+        backend_connected = False
+        backend_error = str(e)
 
-    # Only render tabs if sidebar didn't have a fatal error
+    # Store in session state
+    st.session_state['backend_url'] = BACKEND_URL
+    st.session_state['backend_connected'] = backend_connected
+
+    # Render sidebar (uploads, metrics, settings)
     try:
-        tab1, tab2 = st.tabs(["💬 Intelligence", "📊 SystemOps"])
+        processed_files, active_file = render_sidebar()
+    except Exception as e:
+        st.sidebar.error(f"⚠️ Sidebar Error: {str(e)}")
+        st.sidebar.code(traceback.format_exc())
+        processed_files = {}
+        active_file = None
 
-        with tab1:
-            try:
-                render_chat()
-            except Exception as e:
-                st.error(f"⚠️ Chat Error: {str(e)}")
-                st.code(traceback.format_exc())
+    # Main split-pane layout
+    try:
+        # Check if we have an uploaded file to display
+        uploaded_file = st.session_state.get('current_pdf_file')
+        
+        if uploaded_file or active_file:
+            # Split-pane layout: Document (left) + Chat (right)
+            doc_col, chat_col = st.columns([5, 4])
 
-        with tab2:
-            col1, col2 = st.columns([2, 1])
-            with col1:
+            with doc_col:
+                st.markdown("### 📄 Source Document")
+                
+                # Display PDF if we have binary data
+                if uploaded_file:
+                    try:
+                        binary_data = uploaded_file.getvalue()
+                        pdf_viewer(input=binary_data, width=700)
+                    except Exception as e:
+                        st.error(f"Error displaying PDF: {str(e)}")
+                        st.info("PDF viewer requires the file to be uploaded. Please upload a PDF in the sidebar.")
+                else:
+                    st.info("👈 Upload a PDF in the sidebar to view it here")
+
+            with chat_col:
+                st.markdown("### 🤖 Intelligence")
+                
+                # Render chat interface with split-pane styling
                 try:
-                    render_documents()
+                    render_chat_split_pane(active_file)
                 except Exception as e:
-                    st.error(f"⚠️ Documents Error: {str(e)}")
+                    st.error(f"⚠️ Chat Error: {str(e)}")
                     st.code(traceback.format_exc())
-            with col2:
-                try:
-                    render_status()
-                except Exception as e:
-                    st.error(f"⚠️ Status Error: {str(e)}")
-                    st.code(traceback.format_exc())
+
+        else:
+            # Empty state - no document uploaded
+            st.info("👈 Upload a document in the sidebar to activate Axiom.")
+            
+            # Show backend status if disconnected
+            if not backend_connected:
+                st.warning(f"⚠️ Backend not connected. Set BACKEND_URL environment variable.")
+                st.info(f"Current backend URL: `{BACKEND_URL}`")
+                st.code(f"# Set in HF Spaces Settings → Variables:\nBACKEND_URL=https://your-backend-url.com")
+
     except Exception as e:
-        st.error(f"⚠️ Tabs Error: {str(e)}")
+        st.error("⚠️ **Application Error**")
+        st.error(f"An unexpected error occurred: {str(e)}")
         st.code(traceback.format_exc())
-        # Show a helpful message
-        st.info("Try refreshing the page (F5)")
+        st.info("Try refreshing the page (F5).")
 
-    # ✅ Drawer always rendered last (not in a tab)
-    try:
-        render_drawer()
-    except Exception as e:
-        st.warning(f"⚠️ Drawer Error: {str(e)}")
-        # Don't show traceback for drawer - not critical
-
-except Exception as e:
-    # Global error handler - catches any uncaught exceptions
-    st.error("⚠️ **Application Error**")
-    st.error(f"An unexpected error occurred: {str(e)}")
-    st.code(traceback.format_exc())
-    st.info("""
-    **This error was caught to prevent a blank screen.**
-    
-    Try refreshing the page (F5).
-    
-    If this persists, check that BACKEND_URL is set correctly in HuggingFace Spaces Settings.
-    """)
-
-
-
+if __name__ == "__main__":
+    main()

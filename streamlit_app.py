@@ -26,7 +26,7 @@ import traceback
 
 # Set page config immediately (must be first)
 try:
-    st.set_page_config(page_title="Axiom Enterprise", layout="wide")
+    st.set_page_config(page_title="Axiom AI", layout="wide")
 except Exception:
     pass  # Already set, ignore
 
