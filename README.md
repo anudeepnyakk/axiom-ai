@@ -77,7 +77,7 @@ graph LR
 ```bash
 # 1. Clone the repository
 git clone https://github.com/anudeepnyakk/axiom-ai.git
-cd axiom-ai/hf-axiom
+cd axiom-ai
 
 # 2. Install Dependencies
 pip install -r requirements.txt
@@ -86,7 +86,7 @@ pip install -r requirements.txt
 export OPENAI_API_KEY="sk-..."
 
 # 4. Run the App
-streamlit run app_hf.py
+streamlit run app.py
 ```
 
 -----
@@ -94,7 +94,7 @@ streamlit run app_hf.py
 ## 📚 Documentation
 
   - **[Live Demo on Hugging Face](https://huggingface.co/spaces/anudeepp/axiom-ai)**
-  - **Deployment:** Simply push the `hf-axiom` folder content to a standard Hugging Face Space.
+  - **Deployment:** For Hugging Face Spaces deployment, ensure `app.py` is set as the entry point in your Space settings.
 
 ## License
 
