@@ -1,8 +1,15 @@
+"""
+Chat Interface - Split-Pane RAG Layout
+
+Enhanced chat with status indicators showing RAG pipeline steps.
+"""
+
 import streamlit as st
 from typing import List, Dict, Any
 
 
 def init_state():
+    """Initialize session state for chat"""
     if "messages" not in st.session_state:
         st.session_state.messages: List[Dict[str, Any]] = [
             {
@@ -10,8 +17,6 @@ def init_state():
                 "content": "Hello. I am AXIOM. I have processed your documents. How can I help you today?",
             }
         ]
-    if "drawer_open" not in st.session_state:
-        st.session_state.drawer_open = False
     if "current_sources" not in st.session_state:
         st.session_state.current_sources = []
     if "awaiting_response" not in st.session_state:
@@ -19,6 +24,7 @@ def init_state():
 
 
 def call_backend(question: str) -> Dict[str, Any]:
+    """Call backend API or local query engine"""
     backend_url = st.session_state.get("backend_url")
     if backend_url and st.session_state.get("backend_connected", False):
         import requests
@@ -43,48 +49,74 @@ def call_backend(question: str) -> Dict[str, Any]:
     raise RuntimeError("Backend not connected. Please check configuration.")
 
 
-def render_chat(active_file: str | None = None):
+def render_chat_split_pane(active_file: str | None = None):
+    """
+    Render chat interface optimized for split-pane layout.
+    Shows RAG pipeline status indicators.
+    """
     init_state()
 
-    # Render existing messages with Streamlit chat components
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if message["role"] == "assistant" and message.get("sources"):
-                with st.expander("📎 Sources"):
-                    for source in message["sources"]:
-                        st.write(source.get("metadata", {}).get("source", "Unknown"))
+    # Chat container with fixed height (scrollable)
+    messages_container = st.container(height=600)
 
+    # Render existing messages
+    with messages_container:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+                
+                # Show sources for assistant messages
+                if message["role"] == "assistant" and message.get("sources"):
+                    with st.expander("📚 View Sources"):
+                        for idx, source in enumerate(message["sources"], 1):
+                            source_name = source.get("metadata", {}).get("source", "Unknown")
+                            similarity = source.get("similarity", "N/A")
+                            st.info(f"**Source {idx}:** {source_name}\n\nSimilarity: {similarity}")
+                            if source.get("text"):
+                                st.caption(source["text"])
+
+    # Input area at bottom
     st.markdown("<br>", unsafe_allow_html=True)
+    
+    if prompt := st.chat_input("Query this document..."):
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.awaiting_response = True
+        st.rerun()
 
-    # Input area (form for aligned input + button)
-    with st.form(key="query_form", clear_on_submit=True):
-        cols = st.columns([6, 1])
-        with cols[0]:
-            user_input = st.text_input(
-                "Query",
-                placeholder="Ask a follow-up...",
-                label_visibility="collapsed",
-            )
-        with cols[1]:
-            submit_button = st.form_submit_button("Send", type="primary", use_container_width=True)
-
-        if submit_button and user_input.strip():
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            st.session_state.awaiting_response = True
-            st.rerun()
-
-    # Handle assistant response if needed
+    # Handle assistant response with RAG pipeline visualization
     if st.session_state.awaiting_response and st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         last_question = st.session_state.messages[-1]["content"]
         try:
             with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
+                # Show RAG pipeline steps with st.status
+                with st.status("🔍 Retrieving context...", expanded=True) as status:
+                    st.write("🔍 Searching vector store...")
+                    
+                    # Call backend
                     result = call_backend(last_question)
-                    answer = result.get("answer", "No answer returned.")
-                    sources = result.get("sources", [])
-                    st.markdown(answer)
+                    
+                    st.write("⚖️ Re-ranking top chunks...")
+                    st.write("🧠 Generating response...")
+                    
+                    status.update(label="✅ Context Found", state="complete", expanded=False)
+                
+                # Display answer
+                answer = result.get("answer", "No answer returned.")
+                sources = result.get("sources", [])
+                st.markdown(answer)
+                
+                # Show sources in expander
+                if sources:
+                    with st.expander("📚 View Sources"):
+                        for idx, source in enumerate(sources, 1):
+                            source_name = source.get("metadata", {}).get("source", "Unknown")
+                            similarity = source.get("similarity", "N/A")
+                            st.info(f"**Source {idx}:** {source_name}\n\nSimilarity: {similarity}")
+                            if source.get("text"):
+                                st.caption(source["text"])
 
+            # Save to session state
             st.session_state.messages.append(
                 {"role": "assistant", "content": answer, "sources": sources}
             )
@@ -95,3 +127,10 @@ def render_chat(active_file: str | None = None):
             st.session_state.messages.append({"role": "assistant", "content": error_msg, "sources": []})
         finally:
             st.session_state.awaiting_response = False
+            st.rerun()
+
+
+# Legacy function for backward compatibility
+def render_chat(active_file: str | None = None):
+    """Legacy chat renderer - redirects to split-pane version"""
+    render_chat_split_pane(active_file)

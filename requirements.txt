@@ -1,2 +1,13 @@
-streamlit>=1.28.0
-requests>=2.31.0
+streamlit>=1.35.0
+streamlit-pdf-viewer
+langchain
+langchain-core
+langchain-community==0.3.7
+langchain-openai
+langchain-text-splitters
+chromadb
+pypdf
+tiktoken
+python-dotenv
+numpy<2.0.0
+rank-bm25

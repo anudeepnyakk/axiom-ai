@@ -1,15 +1,27 @@
+"""
+Theme - Dark, Wide Layout for Split-Pane RAG Interface
+
+Production-grade styling matching industry-standard RAG tools.
+"""
+
 import streamlit as st
 
 def apply_theme():
     st.markdown("""
     <style>
     /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
-    /* Global Streamlit styling */
-    body, .stApp {
-        background-color: #ffffff;
-        font-family: 'Source Sans Pro', sans-serif;
+    /* Global Streamlit styling - Dark theme */
+    .stApp {
+        background-color: #0e1117;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Remove massive white header space */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
     }
     
     /* Hide Streamlit branding */
@@ -17,126 +29,58 @@ def apply_theme():
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Centered page layout - EXACTLY like Streamlit assistant */
-    .main-block {
-        max-width: 800px;
-        margin: auto;
-        padding: 2rem 2rem;
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: #1e293b;
+        border-right: 1px solid #334155;
     }
     
-    /* Remove default padding */
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
+    [data-testid="stSidebar"] .stMarkdown h1,
+    [data-testid="stSidebar"] .stMarkdown h2,
+    [data-testid="stSidebar"] .stMarkdown h3 {
+        color: #f1f5f9;
+    }
+    
+    /* Metrics styling */
+    [data-testid="stMetricValue"] {
+        color: #f1f5f9;
+        font-size: 1.8rem;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        color: #10b981;
     }
     
     /* Text input styling */
     .stTextInput > div > div > input {
-        padding: 12px;
+        background-color: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
         border-radius: 8px;
-        border: 1px solid #ddd;
-        font-size: 1.05rem;
+        padding: 12px;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #ff4b4b;
-        box-shadow: 0 0 0 1px #ff4b4b;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
     
-    /* Send button */
-    .stButton > button {
-        background-color: #ff4b4b;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 6px;
-        border: none;
-        font-weight: 600;
-        font-size: 1rem;
+    /* Chat input */
+    [data-testid="stChatInput"] {
+        background-color: #1e293b;
     }
     
-    .stButton > button:hover {
-        background-color: #e04444;
+    /* Chat messages */
+    [data-testid="stChatMessage"] {
+        padding: 1rem;
     }
     
-    /* Chat messages - EXACT styling from Streamlit assistant */
-    .user-msg {
-        background: #f2f2f2;
-        padding: 12px 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        width: auto;
-        max-width: 80%;
-        margin-left: auto;
-        font-size: 15px;
-        line-height: 1.6;
-        color: #262730;
-    }
-    
-    .bot-msg {
-        background: transparent;
-        padding: 12px 0;
-        margin-bottom: 10px;
-        width: auto;
-        font-size: 15px;
-        line-height: 1.7;
-        color: #262730;
-    }
-    
-    /* Chat container */
-    .chat-container {
-        padding-top: 1rem;
-    }
-    
-    /* Sidebar styling */
-    [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
-        border-right: 1px solid #e0e0e0;
-    }
-    
-    /* Custom header */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 0;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .logo {
-        font-size: 24px;
-        font-weight: 700;
-        color: #262730;
-    }
-    
-    .tagline {
-        font-size: 14px;
-        color: #808495;
-    }
-    
-    .health-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #00C853;
-        display: inline-block;
-        margin-right: 6px;
-    }
-    
-    .health-dot-error {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ff4b4b;
-        display: inline-block;
-        margin-right: 6px;
-    }
-    
-    .health-text {
-        font-size: 13px;
-        color: #808495;
-    }
-
+    /* Status indicators */
     .status-indicator {
         display: inline-block;
         width: 10px;
@@ -148,14 +92,79 @@ def apply_theme():
     .status-red { background-color: #ef4444; }
     .status-gray { background-color: #9ca3af; }
     
-    /* Hide spinner text */
-    .stSpinner > div {
-        display: none !important;
+    /* Headers */
+    h1, h2, h3 {
+        color: #f1f5f9;
+        font-weight: 600;
     }
     
-    .stSpinner {
-        text-align: center;
-        padding: 1rem 0;
+    /* Info boxes */
+    .stInfo {
+        background-color: #1e293b;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    /* Expanders */
+    [data-testid="stExpander"] {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background-color: #3b82f6;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        font-weight: 500;
+    }
+    
+    .stButton > button:hover {
+        background-color: #2563eb;
+    }
+    
+    /* File uploader */
+    [data-testid="stFileUploader"] {
+        background-color: #1e293b;
+    }
+    
+    /* Selectbox */
+    [data-baseweb="select"] {
+        background-color: #1e293b;
+        color: #f1f5f9;
+    }
+    
+    /* Toggle */
+    [data-baseweb="switch"] {
+        background-color: #334155;
+    }
+    
+    /* Slider */
+    [data-baseweb="slider"] {
+        color: #3b82f6;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: #334155;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #1e293b;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
     }
     </style>
     """, unsafe_allow_html=True)

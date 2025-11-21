@@ -1,24 +1,32 @@
 """
-Axiom AI - Frontend Only (HuggingFace Spaces)
+Axiom AI - Split-Pane RAG Interface (HuggingFace Spaces)
 
-This is a frontend-only Streamlit app that calls the backend API.
-Backend should be deployed separately (Railway, Render, Fly.io, etc.)
+Production-grade RAG interface with split-pane layout:
+- Left: PDF viewer (source document)
+- Right: Chat interface (intelligence)
+- Sidebar: Uploads, metrics, and system health
 """
 
 import streamlit as st
 import requests
 import os
 import traceback
+from streamlit_pdf_viewer import pdf_viewer
 
-# Note: Page config is set in streamlit_app.py to ensure it's set first
-
-# Import UI components
-from frontend.ui.theme import apply_theme
-from frontend.ui.sidebar import render_sidebar
-from frontend.ui.chat import render_chat
-from frontend.ui.drawer import render_drawer
-from frontend.ui.documents import render_documents
-from frontend.ui.status import render_status
+# Try to import UI components with error handling
+try:
+    from frontend.ui.theme import apply_theme
+    from frontend.ui.sidebar import render_sidebar
+    from frontend.ui.chat import render_chat_split_pane
+except ImportError as e:
+    st.error(f"⚠️ Import Error: {str(e)}")
+    st.code(traceback.format_exc())
+    st.info("Check that all UI modules exist in frontend/ui/")
+    st.stop()
+except Exception as e:
+    st.error(f"⚠️ Error loading UI: {str(e)}")
+    st.code(traceback.format_exc())
+    st.stop()
 
 # Backend API URL (set via environment variable or default)
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
@@ -36,7 +44,6 @@ def query_backend(question: str, top_k: int = 3):
     except Exception as e:
         return {"error": str(e), "answer": None, "sources": []}
 
-# Check backend connection (non-blocking, with timeout)
 def check_backend_status():
     """Check if backend is reachable"""
     try:
@@ -50,79 +57,81 @@ def check_backend_status():
         return False, str(e)
 
 def main():
-    """Main app function - called on every Streamlit rerun"""
-    print("[app_hf.py] main() called")
-    import sys
-    sys.stdout.flush()
-    
+    """Main application entry point"""
     # Apply theme FIRST
     try:
         apply_theme()
     except Exception as e:
         st.warning(f"⚠️ Theme Error: {str(e)}")
-    
-    # Check backend
+
+    # Initialize backend status
     try:
         backend_connected, backend_error = check_backend_status()
     except Exception as e:
         backend_connected = False
         backend_error = str(e)
 
-    # Header row (title + status) – avoids duplicate headers
-    title_col, status_col = st.columns([4, 1])
-    with title_col:
-        st.markdown(
-            '**AXIOM** <span style="color:#9ca3af; font-weight:400;">Grounded intelligence.</span>',
-            unsafe_allow_html=True,
-        )
-
-    with status_col:
-        status_class = "status-green" if backend_connected else "status-red"
-        status_text = "Backend Connected" if backend_connected else "Backend Offline"
-        st.markdown(
-            f"""
-            <div style="text-align: right; font-size: 0.875rem; color: #4b5563;">
-                <span class="status-indicator {status_class}"></span>{status_text}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        if not backend_connected:
-            st.caption(f"`{BACKEND_URL}`")
-
     # Store in session state
     st.session_state['backend_url'] = BACKEND_URL
     st.session_state['backend_connected'] = backend_connected
 
-    # Render UI with centered layout wrapper
+    # Render sidebar (uploads, metrics, settings)
     try:
         processed_files, active_file = render_sidebar()
-        
-        # Page Layout Rewrite - Centered container like Streamlit assistant
-        with st.container():
-            st.markdown('<div class="main-block">', unsafe_allow_html=True)
-            
-            tab1, tab2 = st.tabs(["🧠 Intelligence", "📊 SystemOps"])
-            
-            with tab1:
-                st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-                render_chat(active_file=active_file)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            with tab2:
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    render_documents(processed_files)
-                with col2:
-                    render_status()
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        render_drawer()
-        
     except Exception as e:
-        st.error(f"⚠️ Error: {str(e)}")
+        st.sidebar.error(f"⚠️ Sidebar Error: {str(e)}")
+        st.sidebar.code(traceback.format_exc())
+        processed_files = {}
+        active_file = None
+
+    # Main split-pane layout
+    try:
+        # Check if we have an uploaded file to display
+        uploaded_file = st.session_state.get('current_pdf_file')
+        
+        if uploaded_file or active_file:
+            # Split-pane layout: Document (left) + Chat (right)
+            doc_col, chat_col = st.columns([5, 4])
+
+            with doc_col:
+                st.markdown("### 📄 Source Document")
+                
+                # Display PDF if we have binary data
+                if uploaded_file:
+                    try:
+                        binary_data = uploaded_file.getvalue()
+                        pdf_viewer(input=binary_data, width=700)
+                    except Exception as e:
+                        st.error(f"Error displaying PDF: {str(e)}")
+                        st.info("PDF viewer requires the file to be uploaded. Please upload a PDF in the sidebar.")
+                else:
+                    st.info("👈 Upload a PDF in the sidebar to view it here")
+
+            with chat_col:
+                st.markdown("### 🤖 Intelligence")
+                
+                # Render chat interface with split-pane styling
+                try:
+                    render_chat_split_pane(active_file)
+                except Exception as e:
+                    st.error(f"⚠️ Chat Error: {str(e)}")
+                    st.code(traceback.format_exc())
+
+        else:
+            # Empty state - no document uploaded
+            st.info("👈 Upload a document in the sidebar to activate Axiom.")
+            
+            # Show backend status if disconnected
+            if not backend_connected:
+                st.warning(f"⚠️ Backend not connected. Set BACKEND_URL environment variable.")
+                st.info(f"Current backend URL: `{BACKEND_URL}`")
+                st.code(f"# Set in HF Spaces Settings → Variables:\nBACKEND_URL=https://your-backend-url.com")
+
+    except Exception as e:
+        st.error("⚠️ **Application Error**")
+        st.error(f"An unexpected error occurred: {str(e)}")
         st.code(traceback.format_exc())
+        st.info("Try refreshing the page (F5).")
 
 # Only run main if this file is executed directly (not imported)
 if __name__ == "__main__":
