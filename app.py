@@ -26,10 +26,46 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_community.cache import InMemoryCache
 from langchain_core.globals import set_llm_cache
 from langchain_community.retrievers import BM25Retriever
-try:
-    from langchain.retrievers import EnsembleRetriever
-except ImportError:
-    from langchain_community.retrievers import EnsembleRetriever
+from langchain_core.documents import Document
+from typing import List
+
+# Custom EnsembleRetriever implementation (for LangChain versions that don't include it)
+class EnsembleRetriever:
+    """Combines multiple retrievers with weighted scoring."""
+    
+    def __init__(self, retrievers: List, weights: List[float]):
+        if len(retrievers) != len(weights):
+            raise ValueError("Number of retrievers must match number of weights")
+        if abs(sum(weights) - 1.0) > 0.001:
+            raise ValueError("Weights must sum to 1.0")
+        self.retrievers = retrievers
+        self.weights = weights
+    
+    def get_relevant_documents(self, query: str) -> List[Document]:
+        """Retrieve documents from all retrievers and merge with weighted scoring."""
+        all_docs = {}
+        
+        for retriever, weight in zip(self.retrievers, self.weights):
+            docs = retriever.get_relevant_documents(query)
+            for idx, doc in enumerate(docs):
+                # Create a unique key from content hash (first 200 chars for deduplication)
+                content_hash = hash(doc.page_content[:200])
+                doc_key = (content_hash, doc.metadata.get("source", ""), doc.metadata.get("page", ""))
+                
+                if doc_key in all_docs:
+                    # If duplicate, keep the one with higher weighted score
+                    existing_score = all_docs[doc_key][1]
+                    new_score = weight * (1.0 / (idx + 1))  # Position-based scoring
+                    if new_score > existing_score:
+                        all_docs[doc_key] = (doc, new_score)
+                else:
+                    # Score based on weight and position
+                    score = weight * (1.0 / (idx + 1))
+                    all_docs[doc_key] = (doc, score)
+        
+        # Sort by score (descending) and return documents
+        sorted_docs = sorted(all_docs.values(), key=lambda x: x[1], reverse=True)
+        return [doc for doc, _ in sorted_docs]
 
 # Enable In-Memory Caching (Free Speed)
 set_llm_cache(InMemoryCache())
