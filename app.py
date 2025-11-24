@@ -318,7 +318,7 @@ with st.sidebar:
                     else:
                         status.update(label="Ingestion Failed", state="error")
                         st.error("No chunks extracted from files.")
-    except Exception as e:
+            except Exception as e:
                 st.error(f"Error: {str(e)}")
     
     st.divider()
@@ -347,14 +347,14 @@ if st.session_state.vectorstore and st.session_state.file_cache:
     with col_pdf:
         # border=True creates the outline (Production Polish)
         with st.container(height=700, border=True): 
-                st.markdown("### 📄 Source Document")
-                
+            st.markdown("### 📄 Source Document")
+            
             # Active Document Selector
             file_names = list(st.session_state.file_cache.keys())
             if not file_names:
                 st.warning("No documents available. Please re-upload.")
                 pdf_data = None
-                else:
+            else:
                 if not st.session_state.active_file_name or st.session_state.active_file_name not in file_names:
                     st.session_state.active_file_name = file_names[0]
                 default_index = file_names.index(st.session_state.active_file_name)
@@ -440,7 +440,7 @@ if st.session_state.vectorstore and st.session_state.file_cache:
                             st.session_state.messages.append(
                                 {"role": "assistant", "content": response, "sources": sources_payload}
                             )
-    except Exception as e:
+                        except Exception as e:
                             st.error(f"Error: {str(e)}")
                 
                 st.rerun()  # Rerun to show new messages
