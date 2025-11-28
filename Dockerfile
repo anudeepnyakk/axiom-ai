@@ -1,36 +1,36 @@
-# Use a slim python image for size/speed
+# 1. Use official Python runtime
 FROM python:3.11-slim
 
-# Security: Create a non-root user 'appuser' with ID 1000
-# This prevents the container from having root access to the host machine
-RUN useradd -m -u 1000 appuser
-
+# 2. Set the working directory
 WORKDIR /app
 
-# Install system dependencies (build tools for chroma/numpy)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 3. Install system dependencies
+RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# 4. Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# 5. Copy the rest of the application code
 COPY . .
 
-# Security: Change ownership of the app directory to the non-root user
-RUN chown -R appuser:appuser /app
+# 6. Security: Create a non-root user 'user' (UID 1000)
+RUN useradd -m -u 1000 user
 
-# Switch to non-root user
-USER appuser
+# --- THE FIX IS HERE ---
+# We must give 'user' ownership of the /app directory so it can write the DB
+RUN chown -R user:user /app
 
-# Expose Streamlit port
-EXPOSE 8501
+# 7. Switch to the non-root user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Healthcheck (Good for "Production" claims)
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+# 8. Expose Port 7860
+EXPOSE 7860
 
-# Run
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# 9. Run Streamlit
+CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0"]
