@@ -55,7 +55,7 @@ def apply_theme():
     [data-testid="stMetricDelta"] {
         color: #10b981;
     }
-    
+
     /* Text input styling */
     .stTextInput > div > div > input {
         background-color: #1e293b;
@@ -74,7 +74,7 @@ def apply_theme():
     [data-testid="stChatInput"] {
         background-color: #1e293b;
     }
-    
+
     /* Chat messages */
     [data-testid="stChatMessage"] {
         padding: 1rem;

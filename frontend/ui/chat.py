@@ -55,7 +55,7 @@ def render_chat_split_pane(active_file: str | None = None):
     Shows RAG pipeline status indicators.
     """
     init_state()
-
+    
     # Chat container with fixed height (scrollable)
     messages_container = st.container(height=600)
 
@@ -127,7 +127,7 @@ def render_chat_split_pane(active_file: str | None = None):
             st.session_state.messages.append({"role": "assistant", "content": error_msg, "sources": []})
         finally:
             st.session_state.awaiting_response = False
-            st.rerun()
+                        st.rerun()
 
 
 # Legacy function for backward compatibility

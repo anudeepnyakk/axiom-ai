@@ -1,62 +1,36 @@
-# Dockerfile for HuggingFace Spaces Docker mode
-# Runs both backend (Flask) and frontend (Streamlit) in same container
-
+# Use a slim python image for size/speed
 FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# System deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    libgomp1 \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Security: Create a non-root user 'appuser' with ID 1000
+# This prevents the container from having root access to the host machine
+RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-# Copy all files
-COPY . /app
+# Install system dependencies (build tools for chroma/numpy)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install pip first
-RUN pip install --no-cache-dir --upgrade pip
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install CPU-only PyTorch first (smaller, faster)
-RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
-    torch torchvision torchaudio
+# Copy application code
+COPY . .
 
-# Install all dependencies
-RUN pip install --no-cache-dir \
-    "flask>=2.3.0" \
-    "flask-cors>=4.0.0" \
-    "streamlit>=1.28.0" \
-    "prometheus-client>=0.18.0" \
-    "requests>=2.31.0" \
-    "openai<2.0.0" \
-    "pypdf>=3.0.0" \
-    "tiktoken>=0.5.0" \
-    "PyYAML>=6.0" \
-    "numpy<2.0" \
-    "scikit-learn>=1.3.0" \
-    "chardet>=5.0.0" \
-    "sentence-transformers==2.7.0" \
-    "chromadb<0.5"
+# Security: Change ownership of the app directory to the non-root user
+RUN chown -R appuser:appuser /app
 
-# Create necessary directories
-RUN mkdir -p chroma_db logs axiom/data
+# Switch to non-root user
+USER appuser
 
-# Make start script executable
-RUN chmod +x /app/start.sh
+# Expose Streamlit port
+EXPOSE 8501
 
-# Expose ports
-EXPOSE 5000 7860
+# Healthcheck (Good for "Production" claims)
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV BACKEND_URL=http://127.0.0.1:5000
-
-# Run start script
-CMD ["/app/start.sh"]
-
+# Run
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

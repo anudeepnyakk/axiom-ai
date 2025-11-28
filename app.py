@@ -29,6 +29,9 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 from typing import List
 
+# Import PII Redactor (Middleware)
+from axiom.security.pii_redactor import redact_pii
+
 # Custom EnsembleRetriever implementation (for LangChain versions that don't include it)
 class EnsembleRetriever:
     """Combines multiple retrievers with weighted scoring."""
@@ -67,8 +70,23 @@ class EnsembleRetriever:
         sorted_docs = sorted(all_docs.values(), key=lambda x: x[1], reverse=True)
         return [doc for doc, _ in sorted_docs]
 
+# --- CONSTANTS ---
+MAX_FILES = 5  # Maximum number of documents that can be uploaded
+MAX_FILE_SIZE_MB = 500  # Maximum file size per file in MB
+
 # Enable In-Memory Caching (Free Speed)
 set_llm_cache(InMemoryCache())
+
+# Cache the LLM so we don't re-initialize the client every request
+@st.cache_resource
+def load_chat_llm():
+    """Return a cached ChatOpenAI client with timeout safeguards."""
+    return ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0,
+        timeout=60,  # Fail fast if OpenAI stalls
+        max_retries=1,
+    )
 
 # --- PAGE CONFIG ---
 st.set_page_config(layout="wide", page_title="Axiom AI")
@@ -120,11 +138,23 @@ st.markdown("""
         .stChatInputContainer {
             padding-bottom: 1rem;
         }
+        
+        /* Make chat input always visible - ensure it's not hidden */
+        [data-testid="stChatInput"] {
+            background-color: #ffffff !important;
+            padding-top: 0.5rem !important;
+            margin-top: 0.5rem !important;
+        }
+        
+        /* Ensure chat input container is visible */
+        [data-testid="stChatInput"] > div {
+            background-color: #ffffff !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
 # --- BACKEND LOGIC (Production Optimized) ---
-def get_pdf_chunks(uploaded_file):
+def get_pdf_chunks(uploaded_file, progress_bar=None):
     """Extract chunks from a single PDF using Lazy Loading"""
     # Save to temp file (PyPDFLoader requires a path)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -142,8 +172,16 @@ def get_pdf_chunks(uploaded_file):
         )
         
         chunks = []
+        pages = list(loader.lazy_load())
+        total_pages = len(pages)
+        
         # Process page-by-page (The "Speed" Fix)
-        for page in loader.lazy_load():
+        for idx, page in enumerate(pages):
+            if progress_bar:
+                progress_bar.progress((idx + 1) / total_pages, text=f"Processing {uploaded_file.name}: Page {idx + 1}/{total_pages}")
+            # SECURITY: Redact PII before embedding
+            page.page_content = redact_pii(page.page_content)
+            
             page_chunks = text_splitter.split_documents([page])
             # Add metadata
             for chunk in page_chunks:
@@ -162,7 +200,7 @@ def get_pdf_chunks(uploaded_file):
         except:
             pass
 
-def ingest_files(uploaded_files):
+def ingest_files(uploaded_files, status=None):
     """Process multiple PDFs and build ONE master vector store + BM25 retriever"""
     if not os.environ.get("OPENAI_API_KEY"):
         st.error("⚠️ OPENAI_API_KEY not found in Secrets!")
@@ -174,31 +212,55 @@ def ingest_files(uploaded_files):
     
     all_chunks = []
     
-    # Loop through all files and extract chunks
-    for uploaded_file in uploaded_files:
-        file_chunks = get_pdf_chunks(uploaded_file)
+    # Loop through all files and extract chunks with progress
+    total_files = len(uploaded_files)
+    for file_idx, uploaded_file in enumerate(uploaded_files):
+        if status:
+            status.write(f"📄 Parsing {uploaded_file.name} ({file_idx + 1}/{total_files})...")
+        
+        # Create progress bar for this file
+        file_progress = st.progress(0) if status else None
+        file_chunks = get_pdf_chunks(uploaded_file, file_progress)
         all_chunks.extend(file_chunks)
+        
+        if file_progress:
+            file_progress.empty()
 
     if not all_chunks:
         return None, None
 
     # Build ONE vector store for ALL documents
+    if status:
+        status.write(f"🔢 Creating embeddings for {len(all_chunks)} chunks...")
+    
+    # Use batch processing for embeddings (faster)
+    embedding_function = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        chunk_size=100  # Process embeddings in batches
+    )
+    
     if os.path.exists(persist_directory) and os.listdir(persist_directory):
         # Load existing vectorstore
         vectorstore = Chroma(
             persist_directory=persist_directory,
-            embedding_function=OpenAIEmbeddings(model="text-embedding-3-small")
+            embedding_function=embedding_function
         )
-        # Add new documents
+        # Add new documents in batches
+        if status:
+            status.write("💾 Adding documents to vector store...")
         vectorstore.add_documents(all_chunks)
     else:
         # Create new vectorstore
+        if status:
+            status.write("💾 Building vector store...")
         vectorstore = Chroma.from_documents(
             documents=all_chunks, 
-            embedding=OpenAIEmbeddings(model="text-embedding-3-small"),
+            embedding=embedding_function,
             persist_directory=persist_directory
         )
     
+    if status:
+        status.write("🔍 Building BM25 index...")
     bm25_retriever = BM25Retriever.from_documents(all_chunks)
     
     return vectorstore, bm25_retriever
@@ -251,9 +313,22 @@ Context:
 Question: {question}
 """
     prompt = ChatPromptTemplate.from_template(template)
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm = load_chat_llm()
     chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({"context": context_text, "question": question})
+
+    try:
+        response = chain.invoke({"context": context_text, "question": question})
+    except Exception as exc:
+        print(f"[RAG] LLM invocation failed: {exc}")
+        fallback_snippet = ""
+        if source_docs:
+            snippet = source_docs[0].page_content.strip()
+            fallback_snippet = snippet[:500] + ("..." if len(snippet) > 500 else "")
+        response = (
+            "⚠️ Degraded Mode: The language model did not respond in time. "
+            "Showing the most relevant excerpt instead.\n\n"
+            f"{fallback_snippet or 'No context available.'}"
+        )
 
     return response, source_docs
 
@@ -272,6 +347,10 @@ if "pdf_page" not in st.session_state:
     st.session_state.pdf_page = 1
 if "recent_sources" not in st.session_state:
     st.session_state.recent_sources = []
+if "latency_ms" not in st.session_state:
+    st.session_state.latency_ms = None
+if "latency_delta" not in st.session_state:
+    st.session_state.latency_delta = None
 
 # --- SIDEBAR (Upload & Status) ---
 def on_upload_change():
@@ -325,8 +404,14 @@ with st.sidebar:
     
     # System Health Metrics
     col1, col2 = st.columns(2)
-    col1.metric("Latency", "85ms", "-40ms")
-    col2.metric("Recall", "97%", "+2%")
+    latency_value = (
+        f"{st.session_state.latency_ms} ms" if st.session_state.latency_ms is not None else "—"
+    )
+    latency_delta_value = (
+        f"{st.session_state.latency_delta:+} ms" if st.session_state.latency_delta is not None else "—"
+    )
+    col1.metric("Latency", latency_value, latency_delta_value)
+    col2.metric("Sources Served", len(st.session_state.recent_sources))
 
 # --- MAIN LAYOUT (Production Polish) ---
 
@@ -375,7 +460,7 @@ if st.session_state.vectorstore and st.session_state.file_cache:
                     width=None, 
                     height=600,  # Forces full height visibility
                     render_text=True,
-                    page_number=page_to_render
+                    scroll_to_page=page_to_render
                 )
 
     # RIGHT COLUMN: Chat Interface (Production Polish)
@@ -411,7 +496,17 @@ if st.session_state.vectorstore and st.session_state.file_cache:
                 with messages_container:
                     with st.chat_message("assistant"):
                         try:
-                            response, source_docs = run_rag(prompt)
+                            start_time = time.time()
+                            with st.spinner("Synthesizing answer..."):
+                                response, source_docs = run_rag(prompt)
+                            latency_ms = int((time.time() - start_time) * 1000)
+                            previous_latency = st.session_state.latency_ms
+                            st.session_state.latency_ms = latency_ms
+                            st.session_state.latency_delta = (
+                                latency_ms - previous_latency
+                                if previous_latency is not None
+                                else None
+                            )
 
                             sources_payload = []
                             for doc in source_docs:

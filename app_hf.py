@@ -65,15 +65,15 @@ def main():
         st.warning(f"⚠️ Theme Error: {str(e)}")
 
     # Initialize backend status
-    try:
-        backend_connected, backend_error = check_backend_status()
-    except Exception as e:
-        backend_connected = False
-        backend_error = str(e)
+try:
+    backend_connected, backend_error = check_backend_status()
+except Exception as e:
+    backend_connected = False
+    backend_error = str(e)
 
     # Store in session state
-    st.session_state['backend_url'] = BACKEND_URL
-    st.session_state['backend_connected'] = backend_connected
+st.session_state['backend_url'] = BACKEND_URL
+st.session_state['backend_connected'] = backend_connected
 
     # Render sidebar (uploads, metrics, settings)
     try:
@@ -85,7 +85,7 @@ def main():
         active_file = None
 
     # Main split-pane layout
-    try:
+try:
         # Check if we have an uploaded file to display
         uploaded_file = st.session_state.get('current_pdf_file')
         
@@ -101,7 +101,7 @@ def main():
                     try:
                         binary_data = uploaded_file.getvalue()
                         pdf_viewer(input=binary_data, width=700)
-                    except Exception as e:
+    except Exception as e:
                         st.error(f"Error displaying PDF: {str(e)}")
                         st.info("PDF viewer requires the file to be uploaded. Please upload a PDF in the sidebar.")
                 else:
@@ -111,11 +111,11 @@ def main():
                 st.markdown("### 🤖 Intelligence")
                 
                 # Render chat interface with split-pane styling
-                try:
+            try:
                     render_chat_split_pane(active_file)
-                except Exception as e:
-                    st.error(f"⚠️ Chat Error: {str(e)}")
-                    st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"⚠️ Chat Error: {str(e)}")
+                st.code(traceback.format_exc())
 
         else:
             # Empty state - no document uploaded
@@ -127,10 +127,10 @@ def main():
                 st.info(f"Current backend URL: `{BACKEND_URL}`")
                 st.code(f"# Set in HF Spaces Settings → Variables:\nBACKEND_URL=https://your-backend-url.com")
 
-    except Exception as e:
-        st.error("⚠️ **Application Error**")
-        st.error(f"An unexpected error occurred: {str(e)}")
-        st.code(traceback.format_exc())
+except Exception as e:
+    st.error("⚠️ **Application Error**")
+    st.error(f"An unexpected error occurred: {str(e)}")
+    st.code(traceback.format_exc())
         st.info("Try refreshing the page (F5).")
 
 # Only run main if this file is executed directly (not imported)
