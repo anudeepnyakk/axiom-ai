@@ -11,9 +11,9 @@
 Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Search (Vector + Keyword)**, **Strict Source Citations**, and **Deep Linking** for PDF evidence. It is engineered to run efficiently on Hugging Face Spaces (Free Tier) without memory spikes.
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/777335b1-3b9a-4b0e-b4e1-896d12b2440f" alt="Axiom AI Split-Pane Interface" width="100%" />
+  <img src="https://github.com/user-attachments/assets/cab3a2c6-ddcc-4db0-bf98-eb577e674ee4" alt="Axiom AI Split-Pane Interface" width="100%" />
   <br/><br/>
-  <img src="https://github.com/user-attachments/assets/18ae5dd1-8733-4e60-94af-f0a8d03985f3" alt="Axiom AI Citations" width="100%" />
+  <img src="https://github.com/user-attachments/assets/ec60c417-f490-4025-a7a3-a3ec6a816a6d" alt="Axiom AI Citations" width="100%" />
 </div>
 
 ---
