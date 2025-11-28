@@ -65,15 +65,15 @@ def test_hybrid_retriever_structure():
     vector_retriever = MagicMock()
     bm25_retriever = MagicMock()
     
-    # Create ensemble with correct weights
+    # Create ensemble with correct weights (updated to match app.py: [0.6, 0.4])
     ensemble = EnsembleRetriever(
         retrievers=[vector_retriever, bm25_retriever],
-        weights=[0.7, 0.3]
+        weights=[0.6, 0.4]
     )
     
     # Verify structure
     assert len(ensemble.retrievers) == 2, "Must have 2 retrievers"
-    assert ensemble.weights == [0.7, 0.3], "Weights must be [0.7, 0.3] for optimal hybrid search"
+    assert ensemble.weights == [0.6, 0.4], "Weights must be [0.6, 0.4] for optimal hybrid search"
 
 def test_citation_format():
     """Test that LLM responses include citation format"""
