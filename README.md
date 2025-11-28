@@ -1,3 +1,13 @@
+---
+title: Axiom AI
+emoji: 👑
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # 👑 Axiom AI: Production-Grade RAG Engine
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
