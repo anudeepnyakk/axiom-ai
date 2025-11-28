@@ -134,9 +134,15 @@ st.markdown("""
             font-weight: 600;
         }
         
-        /* Input Field Styling */
+        /* Chat input pinned to bottom */
         .stChatInputContainer {
+            position: sticky;
+            bottom: 0.5rem;
+            z-index: 50;
+            background: #ffffff;
+            padding-top: 0.5rem;
             padding-bottom: 1rem;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -458,11 +464,11 @@ if st.session_state.vectorstore and st.session_state.file_cache:
     # RIGHT COLUMN: Chat Interface (Production Polish)
     with col_chat:
         # border=True creates the outline (Production Polish)
-        with st.container(height=700, border=True):
+        with st.container(height=650, border=True):
             st.markdown("### 🤖 Intelligence")
             
             # Message history container (Scrollable)
-            messages_container = st.container(height=550)
+            messages_container = st.container(height=480)
             
             # Display History
             with messages_container:
@@ -528,9 +534,12 @@ if st.session_state.vectorstore and st.session_state.file_cache:
                                 {"role": "assistant", "content": response, "sources": sources_payload}
                             )
                         except Exception as e:
-                            st.error(f"Error: {str(e)}")
+                            error_msg = f"Sorry, I encountered an error: {str(e)}"
+                            st.error(error_msg)
+                            st.session_state.messages.append({"role": "assistant", "content": error_msg})
                 
-                st.rerun()  # Rerun to show new messages
+                # Removed explicit st.rerun() to prevent clearing transient error messages/states too quickly
+                # Streamlit will automatically handle the UI update.
 
 else:
     # Empty State (Production Polish)
