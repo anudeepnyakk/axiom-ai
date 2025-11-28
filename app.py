@@ -32,9 +32,9 @@ from typing import List
 # Import PII Redactor (Middleware)
 from axiom.security.pii_redactor import redact_pii
 
-# --- CONSTANTS ---
-MAX_FILES = 5
-MAX_FILE_SIZE_MB = 50
+# --- CONSTANTS (Official Spec Sheet) ---
+MAX_FILES = 10
+MAX_FILE_SIZE_MB = 200
 
 # Custom EnsembleRetriever implementation (for LangChain versions that don't include it)
 class EnsembleRetriever:
@@ -194,14 +194,23 @@ def ingest_files(uploaded_files, status=None):
     Path(persist_directory).mkdir(exist_ok=True)
     
     all_chunks = []
-    
-    # Loop through all files and extract chunks with progress
     total_files = len(uploaded_files)
+    
+    # Loop through all files and extract chunks with progress and safety
     for file_idx, uploaded_file in enumerate(uploaded_files):
-        if status:
-            status.write(f"📄 Parsing file {file_idx + 1}/{total_files}: {uploaded_file.name}...")
-        file_chunks = get_pdf_chunks(uploaded_file)
-        all_chunks.extend(file_chunks)
+        try:
+            if status:
+                status.write(f"📄 Parsing file {file_idx + 1}/{total_files}: {uploaded_file.name}...")
+            
+            file_chunks = get_pdf_chunks(uploaded_file)
+            all_chunks.extend(file_chunks)
+            
+            # Cache successful file for viewing
+            st.session_state.file_cache[uploaded_file.name] = uploaded_file.getvalue()
+            
+        except Exception as e:
+            st.error(f"❌ Failed to parse {uploaded_file.name}: {str(e)}")
+            continue
 
     if not all_chunks:
         return None, None
@@ -365,11 +374,6 @@ with st.sidebar:
     
     # Auto-Processing Status Logic (Moved inside Sidebar)
     if uploaded_files:
-        # Store PDF bytes in cache for viewing
-        for file in uploaded_files:
-            if file.name not in st.session_state.file_cache:
-                st.session_state.file_cache[file.name] = file.getvalue()
-
         # Processing Logic
         if st.session_state.vectorstore is None:
             try:
