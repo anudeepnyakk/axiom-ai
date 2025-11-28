@@ -30,8 +30,30 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from typing import List, Any
 
-# Import PII Redactor (Middleware)
-from axiom.security.pii_redactor import redact_pii
+# PII Redaction (Standalone - avoids importing full axiom package which has Prometheus metrics)
+import re
+
+def redact_pii(text: str) -> str:
+    """
+    Redact PII from text before embedding.
+    Standalone implementation to avoid importing full axiom package.
+    """
+    if not text:
+        return text
+    
+    # Email addresses
+    text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL_REDACTED]', text)
+    
+    # Phone numbers (US format)
+    text = re.sub(r'\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b', '[PHONE_REDACTED]', text)
+    
+    # SSN
+    text = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '[SSN_REDACTED]', text)
+    
+    # Credit card numbers
+    text = re.sub(r'\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b', '[CARD_REDACTED]', text)
+    
+    return text
 
 # --- CONSTANTS (Official Spec Sheet) ---
 MAX_FILES = 10
