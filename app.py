@@ -32,6 +32,10 @@ from typing import List
 # Import PII Redactor (Middleware)
 from axiom.security.pii_redactor import redact_pii
 
+# --- CONSTANTS ---
+MAX_FILES = 5
+MAX_FILE_SIZE_MB = 50
+
 # Custom EnsembleRetriever implementation (for LangChain versions that don't include it)
 class EnsembleRetriever:
     """Combines multiple retrievers with weighted scoring."""
@@ -69,10 +73,6 @@ class EnsembleRetriever:
         # Sort by score (descending) and return documents
         sorted_docs = sorted(all_docs.values(), key=lambda x: x[1], reverse=True)
         return [doc for doc, _ in sorted_docs]
-
-# --- CONSTANTS ---
-MAX_FILES = 5  # Maximum number of documents that can be uploaded
-MAX_FILE_SIZE_MB = 500  # Maximum file size per file in MB
 
 # Enable In-Memory Caching (Free Speed)
 set_llm_cache(InMemoryCache())
@@ -138,23 +138,11 @@ st.markdown("""
         .stChatInputContainer {
             padding-bottom: 1rem;
         }
-        
-        /* Make chat input always visible - ensure it's not hidden */
-        [data-testid="stChatInput"] {
-            background-color: #ffffff !important;
-            padding-top: 0.5rem !important;
-            margin-top: 0.5rem !important;
-        }
-        
-        /* Ensure chat input container is visible */
-        [data-testid="stChatInput"] > div {
-            background-color: #ffffff !important;
-        }
     </style>
 """, unsafe_allow_html=True)
 
 # --- BACKEND LOGIC (Production Optimized) ---
-def get_pdf_chunks(uploaded_file, progress_bar=None):
+def get_pdf_chunks(uploaded_file):
     """Extract chunks from a single PDF using Lazy Loading"""
     # Save to temp file (PyPDFLoader requires a path)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -172,13 +160,8 @@ def get_pdf_chunks(uploaded_file, progress_bar=None):
         )
         
         chunks = []
-        pages = list(loader.lazy_load())
-        total_pages = len(pages)
-        
         # Process page-by-page (The "Speed" Fix)
-        for idx, page in enumerate(pages):
-            if progress_bar:
-                progress_bar.progress((idx + 1) / total_pages, text=f"Processing {uploaded_file.name}: Page {idx + 1}/{total_pages}")
+        for page in loader.lazy_load():
             # SECURITY: Redact PII before embedding
             page.page_content = redact_pii(page.page_content)
             
@@ -216,51 +199,33 @@ def ingest_files(uploaded_files, status=None):
     total_files = len(uploaded_files)
     for file_idx, uploaded_file in enumerate(uploaded_files):
         if status:
-            status.write(f"📄 Parsing {uploaded_file.name} ({file_idx + 1}/{total_files})...")
-        
-        # Create progress bar for this file
-        file_progress = st.progress(0) if status else None
-        file_chunks = get_pdf_chunks(uploaded_file, file_progress)
+            status.write(f"📄 Parsing file {file_idx + 1}/{total_files}: {uploaded_file.name}...")
+        file_chunks = get_pdf_chunks(uploaded_file)
         all_chunks.extend(file_chunks)
-        
-        if file_progress:
-            file_progress.empty()
 
     if not all_chunks:
         return None, None
 
-    # Build ONE vector store for ALL documents
     if status:
-        status.write(f"🔢 Creating embeddings for {len(all_chunks)} chunks...")
-    
-    # Use batch processing for embeddings (faster)
-    embedding_function = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        chunk_size=100  # Process embeddings in batches
-    )
-    
+        status.write("🧠 Generating embeddings & building index...")
+
+    # Build ONE vector store for ALL documents
     if os.path.exists(persist_directory) and os.listdir(persist_directory):
         # Load existing vectorstore
         vectorstore = Chroma(
             persist_directory=persist_directory,
-            embedding_function=embedding_function
+            embedding_function=OpenAIEmbeddings(model="text-embedding-3-small")
         )
-        # Add new documents in batches
-        if status:
-            status.write("💾 Adding documents to vector store...")
+        # Add new documents
         vectorstore.add_documents(all_chunks)
     else:
         # Create new vectorstore
-        if status:
-            status.write("💾 Building vector store...")
         vectorstore = Chroma.from_documents(
             documents=all_chunks, 
-            embedding=embedding_function,
+            embedding=OpenAIEmbeddings(model="text-embedding-3-small"),
             persist_directory=persist_directory
         )
     
-    if status:
-        status.write("🔍 Building BM25 index...")
     bm25_retriever = BM25Retriever.from_documents(all_chunks)
     
     return vectorstore, bm25_retriever
@@ -365,14 +330,38 @@ def on_upload_change():
 with st.sidebar:
     st.header("System Cortex")
     
+    # Display file limit info
+    current_file_count = len(st.session_state.file_cache) if st.session_state.file_cache else 0
+    st.caption(f"📎 Max {MAX_FILES} documents • {MAX_FILE_SIZE_MB}MB per file")
+    if current_file_count >= MAX_FILES:
+        st.warning(f"⚠️ Maximum limit reached ({MAX_FILES} documents)")
+    
     uploaded_files = st.file_uploader(
-        "Ingest Documents", 
+        "Drag and drop files here", 
         type=['pdf'], 
         accept_multiple_files=True,
-        label_visibility="collapsed",
+        help=f"Maximum {MAX_FILES} documents. Limit {MAX_FILE_SIZE_MB}MB per file.",
         key="uploaded_files_widget",
         on_change=on_upload_change
     )
+    
+    # Enforce file limit
+    if uploaded_files:
+        if len(uploaded_files) > MAX_FILES:
+            st.error(f"⚠️ Too many files! Maximum {MAX_FILES} documents allowed. Please select fewer files.")
+            uploaded_files = None
+        else:
+            # Check total file count including already cached files
+            total_files = len(uploaded_files) + current_file_count
+            if total_files > MAX_FILES:
+                st.error(f"⚠️ File limit exceeded! You have {current_file_count} document(s) already. Maximum {MAX_FILES} documents total.")
+                uploaded_files = None
+            else:
+                # Check individual file sizes
+                oversized_files = [f.name for f in uploaded_files if f.size > MAX_FILE_SIZE_MB * 1024 * 1024]
+                if oversized_files:
+                    st.error(f"⚠️ File(s) too large: {', '.join(oversized_files)}. Maximum {MAX_FILE_SIZE_MB}MB per file.")
+                    uploaded_files = None
     
     # Auto-Processing Status Logic (Moved inside Sidebar)
     if uploaded_files:
@@ -385,8 +374,7 @@ with st.sidebar:
         if st.session_state.vectorstore is None:
             try:
                 with st.status("Ingesting library...", expanded=True) as status:
-                    status.write("📄 Parsing documents and building hybrid index...")
-                    vectorstore, bm25_retriever = ingest_files(uploaded_files)
+                    vectorstore, bm25_retriever = ingest_files(uploaded_files, status=status)
                     if vectorstore and bm25_retriever:
                         st.session_state.vectorstore = vectorstore
                         st.session_state.bm25_retriever = bm25_retriever
