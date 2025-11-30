@@ -10,6 +10,7 @@ import os
 import tempfile
 import time
 import shutil
+import concurrent.futures
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -228,20 +229,36 @@ def ingest_files(uploaded_files, status=None):
     total_files = len(uploaded_files)
     
     # Loop through all files and extract chunks with progress and safety
-    for file_idx, uploaded_file in enumerate(uploaded_files):
+    # PARALLEL PROCESSING: Speed up ingestion by parsing files concurrently
+    
+    def process_file_wrapper(file_obj):
+        """Helper to process a single file in a thread-safe way"""
         try:
-            if status:
-                status.write(f"📄 Parsing file {file_idx + 1}/{total_files}: {uploaded_file.name}...")
-            
-            file_chunks = get_pdf_chunks(uploaded_file)
-            all_chunks.extend(file_chunks)
-            
-            # Cache successful file for viewing
-            st.session_state.file_cache[uploaded_file.name] = uploaded_file.getvalue()
-            
+            # We must read bytes here if not already done, but Streamlit files are seekable
+            return file_obj.name, file_obj.getvalue(), get_pdf_chunks(file_obj), None
         except Exception as e:
-            st.error(f"❌ Failed to parse {uploaded_file.name}: {str(e)}")
-            continue
+            return file_obj.name, None, [], str(e)
+
+    if status:
+        status.write(f"🚀 Parsing {total_files} documents in parallel...")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        # Submit all tasks
+        future_to_file = {executor.submit(process_file_wrapper, f): f for f in uploaded_files}
+        
+        # Collect results as they finish
+        for i, future in enumerate(concurrent.futures.as_completed(future_to_file)):
+            file_name, file_bytes, chunks, error = future.result()
+            
+            if error:
+                st.error(f"❌ Failed to parse {file_name}: {error}")
+            else:
+                all_chunks.extend(chunks)
+                st.session_state.file_cache[file_name] = file_bytes
+                
+            if status:
+                progress = (i + 1) / total_files
+                status.write(f"✅ Processed {i + 1}/{total_files}: {file_name}")
 
     if not all_chunks:
         return None, None
