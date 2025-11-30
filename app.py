@@ -312,12 +312,9 @@ def run_rag(question: str):
     context_text = "\n\n".join(context_sections) if context_sections else "No context provided."
 
     template = """
-You are a research assistant. Answer the question based on the following context.
-If the context contains information that directly or indirectly answers the question, provide that answer.
-Only say "I cannot find this information in the document" if the context is completely unrelated to the question. Meaning there is nothing
-in the book that can possibly answer that question. If there is a lot of content, pick the strongest answers and give them. 
-
-DO NOT MAKE UP INFORMATION. Even if there is a single piece of content, provide it. 
+You are a research assistant. Answer the question SOLELY based on the provided context.
+Do not use any outside knowledge, prior training data, or other books.
+If the answer is not found in the context, simply say "I cannot find this information in the document."
 
 CRITICAL INSTRUCTION:
 You must cite the page number and document name for every statement you make. Use the format: (Page X, doc_name.pdf).
