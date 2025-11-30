@@ -441,27 +441,6 @@ with st.sidebar:
     
     st.divider()
     
-    # --- DANGER ZONE (Reset) ---
-    if st.button("🗑️ Reset Knowledge Base", type="primary", use_container_width=True):
-        st.session_state.vectorstore = None
-        st.session_state.bm25_retriever = None
-        st.session_state.file_cache = {}
-        st.session_state.messages = []
-        st.session_state.active_file_name = None
-        
-        # Nuke session-specific persistence directory
-        if "persist_directory" in st.session_state and os.path.exists(st.session_state.persist_directory):
-            try:
-                shutil.rmtree(st.session_state.persist_directory)
-                st.toast("Storage Cleared!", icon="🧹")
-            except Exception as e:
-                st.error(f"Failed to clear storage: {e}")
-        
-        # Create a fresh temp directory for the next cycle
-        st.session_state.persist_directory = tempfile.mkdtemp()
-        
-        st.rerun()
-
     # --- VIDEO DEMO METRICS (Director's Cut) ---
     # We explicitly surface RETRIEVAL latency here (not total LLM time),
     # matching the benchmark in tests/benchmark_latency.py (~4.74 ms avg).
