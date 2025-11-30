@@ -216,8 +216,13 @@ def ingest_files(uploaded_files, status=None):
         return None, None
 
     # Use a persistent directory inside the container
-    persist_directory = "./chroma_db"
-    Path(persist_directory).mkdir(exist_ok=True)
+    # persist_directory = "./chroma_db"
+    # ISOLATION: Use the session-specific unique directory
+    if "persist_directory" not in st.session_state:
+        st.session_state.persist_directory = tempfile.mkdtemp()
+    
+    persist_directory = st.session_state.persist_directory
+    # Path(persist_directory).mkdir(exist_ok=True) # mkdtemp creates it
     
     all_chunks = []
     total_files = len(uploaded_files)
@@ -345,6 +350,10 @@ Question: {question}
     return response, source_docs
 
 # --- INITIALIZE SESSION STATE ---
+if "persist_directory" not in st.session_state:
+    # ISOLATION: Create a unique temp directory for THIS session only
+    st.session_state.persist_directory = tempfile.mkdtemp()
+
 if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = None
 if "bm25_retriever" not in st.session_state:
@@ -440,13 +449,16 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.active_file_name = None
         
-        # Nuke persistence directory
-        if os.path.exists("./chroma_db"):
+        # Nuke session-specific persistence directory
+        if "persist_directory" in st.session_state and os.path.exists(st.session_state.persist_directory):
             try:
-                shutil.rmtree("./chroma_db")
+                shutil.rmtree(st.session_state.persist_directory)
                 st.toast("Storage Cleared!", icon="🧹")
             except Exception as e:
                 st.error(f"Failed to clear storage: {e}")
+        
+        # Create a fresh temp directory for the next cycle
+        st.session_state.persist_directory = tempfile.mkdtemp()
         
         st.rerun()
 
