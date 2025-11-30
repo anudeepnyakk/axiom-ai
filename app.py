@@ -389,16 +389,69 @@ if "latency_ms" not in st.session_state:
     st.session_state.latency_ms = None
 if "latency_delta" not in st.session_state:
     st.session_state.latency_delta = None
+if "previous_file_count" not in st.session_state:
+    st.session_state.previous_file_count = 0
 
 # --- SIDEBAR (Upload & Status) ---
 def on_upload_change():
-    """Callback to reset processing state when a new file is uploaded"""
-    st.session_state.vectorstore = None
-    st.session_state.bm25_retriever = None
+    """Smart callback: Clear chat ONLY if files were removed/replaced, keep if added."""
+    uploaded_files = st.session_state.get("uploaded_files_widget", [])
+    current_count = len(uploaded_files)
+    prev_count = st.session_state.get("previous_file_count", 0)
+    
+    # Logic: 
+    # If fewer files (Removed) -> Clear Chat
+    # If more files (Added) -> Keep Chat
+    # If same count (likely re-upload same file after X) -> Clear Chat
+    
+    if current_count < prev_count or current_count == prev_count:
+        st.session_state.messages = []
+        st.session_state.vectorstore = None
+        st.session_state.bm25_retriever = None
+        st.session_state.recent_sources = []
+        st.session_state.file_cache = {}
+        st.session_state.active_file_name = None
+        # We also need to nuke the DB to ensure fresh ingestion for the new state
+        if "persist_directory" in st.session_state and os.path.exists(st.session_state.persist_directory):
+            try:
+                shutil.rmtree(st.session_state.persist_directory)
+                st.session_state.persist_directory = tempfile.mkdtemp()
+            except:
+                pass
+    
+    # Update count for next time
+    st.session_state.previous_file_count = current_count
+    
+    # If purely adding, we don't nuke vectorstore here, ingest_files will append.
+    # But wait, our ingest_files function REBUILDS from scratch currently based on uploaded_files list.
+    # So actually, for this simple implementation, any change triggers re-ingestion.
+    # The user request is about CHAT HISTORY.
+    
+    # Refined Logic based on request:
+    # "if i remove the file... chat should go away" -> Clear messages
+    # "if i add another pdf... chat should continue" -> Keep messages
+    
+    if current_count > prev_count:
+        # Added a file: Keep messages, but reset processing triggers
+        st.session_state.vectorstore = None
+        st.session_state.bm25_retriever = None
+        # Don't clear messages!
+    else:
+        # Removed or Replaced: Clear everything
+        st.session_state.messages = []
+        st.session_state.vectorstore = None
+        st.session_state.bm25_retriever = None
+        st.session_state.recent_sources = []
+        st.session_state.file_cache = {}
+        st.session_state.active_file_name = None
+        if "persist_directory" in st.session_state and os.path.exists(st.session_state.persist_directory):
+            try:
+                shutil.rmtree(st.session_state.persist_directory)
+                st.session_state.persist_directory = tempfile.mkdtemp()
+            except:
+                pass
+    
     st.session_state.pdf_page = 1
-    st.session_state.recent_sources = []
-    st.session_state.file_cache = {}
-    st.session_state.active_file_name = None
 
 with st.sidebar:
     st.header("System Cortex")
