@@ -11,6 +11,10 @@
 Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Search (Vector + Keyword)**, **Strict Source Citations**, and **Deep Linking** for PDF evidence. It is engineered to run efficiently on Hugging Face Spaces (Free Tier) without memory spikes.
 
 <div align="center">
+  <a href="https://www.loom.com/share/60b56802c38845448b1e018b79430d95">
+    <img src="https://cdn.loom.com/sessions/thumbnails/60b56802c38845448b1e018b79430d95-with-play.gif" alt="Watch the Video Walkthrough" width="100%" />
+  </a>
+  <br/><br/>
   <img src="https://github.com/user-attachments/assets/cab3a2c6-ddcc-4db0-bf98-eb577e674ee4" alt="Axiom AI Split-Pane Interface" width="100%" />
   <br/><br/>
   <img src="https://github.com/user-attachments/assets/ec60c417-f490-4025-a7a3-a3ec6a816a6d" alt="Axiom AI Citations" width="100%" />
@@ -101,6 +105,7 @@ streamlit run app.py
 
 ## 📚 Documentation
 
+  - **[🎥 Video Walkthrough](https://www.loom.com/share/60b56802c38845448b1e018b79430d95)**
   - **[Live Demo on Hugging Face](https://huggingface.co/spaces/anudeepp/axiom-ai)**
   - **Deployment:** For Hugging Face Spaces deployment, ensure `app.py` is set as the entry point in your Space settings.
 
