@@ -1,14 +1,3 @@
----
-title: Axiom AI
-emoji: 👑
-colorFrom: blue
-colorTo: purple
-sdk: streamlit
-sdk_version: "1.39.0"
-app_file: app.py
-pinned: false
----
-
 # 👑 Axiom AI: Production-Grade RAG Engine
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
