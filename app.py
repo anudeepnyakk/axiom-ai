@@ -294,11 +294,11 @@ def run_rag(question: str):
 
     vector_retriever = st.session_state.vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 6}
+        search_kwargs={"k": 10}
     )
 
     bm25_retriever = st.session_state.bm25_retriever
-    bm25_retriever.k = 6
+    bm25_retriever.k = 10
 
     hybrid_retriever = EnsembleRetriever(
         retrievers=[vector_retriever, bm25_retriever],
