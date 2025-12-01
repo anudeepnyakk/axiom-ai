@@ -477,21 +477,20 @@ with st.sidebar:
             st.error(f"⚠️ Too many files! Maximum {MAX_FILES} documents allowed. Please select fewer files.")
             uploaded_files = None
         else:
-            # Check total file count including already cached files
-            total_files = len(uploaded_files) + current_file_count
-            if total_files > MAX_FILES:
-                st.error(f"⚠️ File limit exceeded! You have {current_file_count} document(s) already. Maximum {MAX_FILES} documents total.")
+            # Check individual file sizes
+            oversized_files = [f.name for f in uploaded_files if f.size > MAX_FILE_SIZE_MB * 1024 * 1024]
+            if oversized_files:
+                st.error(f"⚠️ File(s) too large: {', '.join(oversized_files)}. Maximum {MAX_FILE_SIZE_MB}MB per file.")
                 uploaded_files = None
-            else:
-                # Check individual file sizes
-                oversized_files = [f.name for f in uploaded_files if f.size > MAX_FILE_SIZE_MB * 1024 * 1024]
-                if oversized_files:
-                    st.error(f"⚠️ File(s) too large: {', '.join(oversized_files)}. Maximum {MAX_FILE_SIZE_MB}MB per file.")
-                    uploaded_files = None
     
     # Auto-Processing Status Logic (Moved inside Sidebar)
     if uploaded_files:
-        # Processing Logic
+        # 1. Populate File Cache (CRITICAL for PDF Viewer)
+        for file in uploaded_files:
+            if file.name not in st.session_state.file_cache:
+                st.session_state.file_cache[file.name] = file.getvalue()
+
+        # 2. Processing Logic
         if st.session_state.vectorstore is None:
             try:
                 with st.status("Ingesting library...", expanded=True) as status:
