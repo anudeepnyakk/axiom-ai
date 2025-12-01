@@ -36,13 +36,13 @@ Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Searc
 ## ✨ Key Features
 
 ### 🧠 Smart Retrieval
-- **Hybrid Search:** Combines `ChromaDB` (Vector) + `BM25` (Keyword) to achieve **97% Recall@5**.
+- **Hybrid Search:** Combines `ChromaDB` (Vector) + `BM25` (Keyword) to achieve **High Recall**.
 - **Lazy Loading:** Ingestion pipeline streams large PDFs page-by-page, keeping RAM usage low.
 - **Smart Caching:** Uses `InMemoryCache` to eliminate redundant API calls and costs.
 
 ### 👁️ User Experience
 - **Split-Pane UI:** View source documents and chat logic side-by-side (Lawyer/Analyst workflow).
-- **Deep Linking:** Interactive citations—clicking `(Page 5)` auto-scrolls the PDF viewer to the exact evidence.
+- **Interactive Citations:** Citations map to exact PDF page coordinates for instant auditability.
 - **Multi-File Support:** Ingest and query multiple research papers simultaneously.
 
 ### 🛡️ Security & Infrastructure
@@ -53,12 +53,13 @@ Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Searc
 ---
 
 ## 📊 Performance
-*Evaluated on a baseline of technical documentation using synthetic test queries.*
+*Evaluated on a controlled test set using 30+ domain-specific questions.*
 
 | Metric | Value | Notes |
 | :--- | :--- | :--- |
-| **Recall@5** | **97%** | Hybrid Search (Ensemble) on synthetic evaluation set |
-| **Latency** | **~5ms** | Local Cache Retrieval Time (Excludes LLM generation) |
+| **Recall@5** | **High** | Hybrid Search (Ensemble) on controlled test set |
+| **Retrieval** | **<200ms** | Vector Search Latency (Cached) |
+| **Response** | **~2-5s** | End-to-end Latency (including LLM generation) |
 | **Cost** | **<$0.01** | Per 100 Queries (GPT-4o-mini) |
 
 ---
@@ -67,10 +68,10 @@ Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Searc
 
 **What's New in v2.0:**
 
-* **Hybrid Search:** Combines BM25 (Keyword) + ChromaDB (Vector) for **97% Recall@5**. Engineered to resolve semantic drift in low-resource languages like **Hindi**, improving recall by ~15% over vector-only baselines.
-* **Deep Linking:** Interactive citations—clicking `[Page 12]` auto-scrolls the PDF viewer to the exact evidence. The system automatically switches to the correct document if multiple files are loaded.
-* **Lazy Loading:** Ingests 200MB+ PDFs without RAM spikes using streaming generators. Processes documents page-by-page instead of loading entire files into memory.
-* **Strict Citations:** Every answer includes source metadata (filename + page number) in a consistent format, enabling trust and verification.
+* **Hybrid Search:** Combines BM25 (Keyword) + ChromaDB (Vector) to improve recall on keyword-heavy queries.
+* **Interactive Citations:** Clicking `[Page 12]` auto-scrolls the PDF viewer to the exact evidence.
+* **Lazy Loading Architecture:** Streams large PDFs page-by-page, significantly reducing memory usage.
+* **Strict Citations:** Every answer includes source metadata (filename + page number) in a consistent format.
 * **Secure by Design:** Integrated PII Redaction middleware and non-root container architecture.
 
 ---
