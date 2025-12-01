@@ -532,7 +532,10 @@ if "messages" not in st.session_state or len(st.session_state.messages) == 0:
     st.session_state.messages = [{"role": "assistant", "content": "Document analyzed. Ask me anything."}]
 
 # 2. Main Split Interface
-if st.session_state.vectorstore and st.session_state.file_cache:
+# NOTE: We render the UI as soon as files are available, even if the vectorstore
+# is still building or failed (e.g. missing OPENAI_API_KEY). RAG calls will
+# gracefully error via run_rag, but the PDF viewer remains usable.
+if st.session_state.file_cache:
     # Create two columns with clear separation
     col_pdf, col_chat = st.columns([1, 1])
 
