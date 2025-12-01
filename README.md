@@ -53,12 +53,12 @@ Axiom AI v2.0 is a monolithic Streamlit application that delivers **Hybrid Searc
 ---
 
 ## 📊 Performance
-*Evaluated on a baseline of technical documentation.*
+*Evaluated on a baseline of technical documentation using synthetic test queries.*
 
 | Metric | Value | Notes |
 | :--- | :--- | :--- |
-| **Recall@5** | **97%** | Hybrid Search (Ensemble) |
-| **Latency** | **~5ms** | Retrieval Latency (Cached) |
+| **Recall@5** | **97%** | Hybrid Search (Ensemble) on synthetic evaluation set |
+| **Latency** | **~5ms** | Local Cache Retrieval Time (Excludes LLM generation) |
 | **Cost** | **<$0.01** | Per 100 Queries (GPT-4o-mini) |
 
 ---
