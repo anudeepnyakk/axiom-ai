@@ -3,9 +3,8 @@ title: Axiom AI
 emoji: 👑
 colorFrom: blue
 colorTo: purple
-sdk: streamlit
-sdk_version: "1.39.0"
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 ---
 

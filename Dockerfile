@@ -32,5 +32,6 @@ EXPOSE 8501
 # Healthcheck (Good for "Production" claims)
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
-# Run
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run with flags to fix Hugging Face upload 400 errors (CORS/XSRF)
+CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false", "--server.maxUploadSize=200"]
+
